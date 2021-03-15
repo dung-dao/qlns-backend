@@ -92,8 +92,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', 
         'NAME': 'qlns',
-        'USER': 'django',
-        'PASSWORD': 'HSfEL^g@oA8o$kHHv5eoS!H6SP7s',
+        'USER': 'root',
+        'PASSWORD': 'LLV6#s9ustmIp7xz',
         'HOST': 'localhost',
         'PORT': '3306',
     }
