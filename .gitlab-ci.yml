@@ -1,0 +1,12 @@
+stages:
+  - deploy
+
+Deploy:
+  stage: deploy
+  when: on_success
+  tags:
+    - develop
+  only:
+    - develop
+  script:
+    - sudo -H -u gitlab-runner bash -c /var/www/deploy/backend-deploy.sh
