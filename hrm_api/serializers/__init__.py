@@ -1,3 +1,0 @@
-from .group_serializer import GroupSerializer, PermissionSerializer
-from .staff_serializer import StaffSerializer
-from .department_serializer import DepartmentSerializer
