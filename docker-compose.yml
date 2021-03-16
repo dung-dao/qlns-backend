@@ -2,7 +2,7 @@
 version: '3'
 services:
   db:
-    image: mysql:8
+    image: mysql:latest
     ports:
       - "3306:3306"
     environment:
@@ -10,7 +10,7 @@ services:
       - MYSQL_USER='root'
       - MYSQL_PASSWORD='LLV6#s9ustmIp7xz'
       - MYSQL_ROOT_PASSWORD='LLV6#s9ustmIp7xz'
-      - MYSQL_HOST=''
+      - MYSQL_HOST='localhost'
     volumes:
       - /tmp/app/mysqld:/var/run/mysqld
       - ./db:/var/lib/mysql
