@@ -8,10 +8,8 @@ ENV PYTHONUNBUFFERED 1
 
 # Edit with mysql-client, postgresql-client, sqlite3, etc. for your needs.
 # Or delete entirely if not needed.
-RUN apt-get update \
-     && apt-get install -y --no-install-recommends \
-         libmysqlclient-dev \
-     && rm -rf /var/lib/apt/lists/*
+RUN apt-get update
+RUN apt-get install -y libmysqlclient-dev
 
 # creates a new folder in your container called app which will be your project’s root inside the container
 WORKDIR /app
