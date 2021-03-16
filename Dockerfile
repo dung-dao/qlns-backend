@@ -10,7 +10,8 @@ ENV PYTHONUNBUFFERED 1
 # Or delete entirely if not needed.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        mysql-client \
+        mysqlclient \
+        gettext \
     && rm -rf /var/lib/apt/lists/*
 
 # creates a new folder in your container called app which will be your project’s root inside the container
