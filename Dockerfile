@@ -8,11 +8,10 @@ ENV PYTHONUNBUFFERED 1
 
 # Edit with mysql-client, postgresql-client, sqlite3, etc. for your needs.
 # Or delete entirely if not needed.
-# RUN apt-get update \
-#     && apt-get install -y --no-install-recommends \
-#         mysqlclient \
-#         gettext \
-#     && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+     && apt-get install -y --no-install-recommends \
+         libmysqlclient-dev \
+     && rm -rf /var/lib/apt/lists/*
 
 # creates a new folder in your container called app which will be your project’s root inside the container
 WORKDIR /app
@@ -21,6 +20,7 @@ WORKDIR /app
 COPY requirements.txt /app/requirements.txt
 # RUN pip install -r requirements.txt will make sure you have all your project dependencies installed inside the container.
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install mysqlclient
 # COPY . /app and finally it’s time to copy your project’s content into the Docker container.
 COPY . /app
 
