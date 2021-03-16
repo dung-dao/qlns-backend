@@ -20,7 +20,6 @@ WORKDIR /app
 COPY requirements.txt /app/requirements.txt
 # RUN pip install -r requirements.txt will make sure you have all your project dependencies installed inside the container.
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install mysqlclient
 # COPY . /app and finally it’s time to copy your project’s content into the Docker container.
 COPY . /app
 
