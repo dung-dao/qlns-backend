@@ -11,9 +11,9 @@ services:
       - MYSQL_PASSWORD='LLV6#s9ustmIp7xz'
       - MYSQL_ROOT_PASSWORD='LLV6#s9ustmIp7xz'
       - MYSQL_HOST='localhost'
-    volumes:
-      - /tmp/app/mysqld:/var/run/mysqld
-      - ./db:/var/lib/mysql
+  #  volumes:
+  #    - /tmp/app/mysqld:/var/run/mysqld
+  #    - ./db:/var/lib/mysql
   web:
     build: .
     command: python manage.py runserver 0.0.0.0:8000
@@ -21,6 +21,6 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
-      - /tmp/app/mysqld:/run/mysqld
+  #    - /tmp/app/mysqld:/run/mysqld
     depends_on:
       - db
