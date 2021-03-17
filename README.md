@@ -20,7 +20,7 @@ python manage.py collectstatic
 
 Pull source code from gitlab
 
-Rename file setting.example.py thành setting.py
+Rename file settings.example.py thành settings.py
 
 Vào thư mục gốc của dự án đã clone về.
 **Chạy lệnh bên dưới:**
