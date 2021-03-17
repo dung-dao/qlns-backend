@@ -1,13 +1,50 @@
-# qlns-backend
+# Build development with cài đặt theo gói
 
+**Cài đặt thư viện cần thiết bằng lệnh:**
 pip install -r requirements.txt
 
+**Chạy migrate database:**
 python manage.py migrate
 
+**Chạy lệnh tạo admin user:**
 python manage.py createsuperuser
 
+**Chạy compilemessages nếu có:**
 python manage.py compilemessages
 
+**Chạy lệnh gom file static về thu mục static:**
 python manage.py collectstatic
 
-python manage.py seed_data_advanced_filter
+
+# Build development with docker.
+
+Pull source code from gitlab
+
+Edit file setting.py và sửa phần database theo thông số bên dưới (giống với user và password được định nghĩa trong file docker-compose.yml)
+
+> DATABASES = {  
+>     'default': {
+>         'ENGINE': 'django.db.backends.mysql', 
+>         'NAME': 'qlns',
+>         'USER': 'root',
+>         'PASSWORD': 's9ustmIp7xz',
+>         'HOST': 'db',
+>         'PORT': '3306',
+>     }
+> }
+
+
+Vào thư mục gốc của dự án đã clone về.
+**Chạy lệnh bên dưới:**
+docker-compose up --build -d 
+
+**Sau đó chạy lênh migrate dữ liệu:**
+docker-compose run web python manage.py migrate
+
+**Chạy lệnh tạo user admin:**
+docker-compose run web python manage.py createsuperuser
+
+**Vào trình duyệt để kiểm tra:**
+localhost:8000
+
+
