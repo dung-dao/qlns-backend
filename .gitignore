@@ -115,3 +115,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#setting.py
+qlns/settings.py
+
+#database
+db_data/
+
+#debug file
+.idea/

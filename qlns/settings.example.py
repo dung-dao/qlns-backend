@@ -88,17 +88,8 @@ REST_FRAMEWORK = {
 #        'NAME': BASE_DIR / 'db.sqlite3',
 #    }
 #}
-DATABASES = {  
-    'default': {
-        'ENGINE': 'django.db.backends.mysql', 
-        'NAME': 'qlns',
-        'USER': 'root',
-        'PASSWORD': 'LLV6#s9ustmIp7xz',
-        'HOST': 'localhost',
-        'PORT': '3306',
-    }
-}
-
+DATABASES = {
+'default': { 'ENGINE': 'django.db.backends.mysql', 'NAME': 'qlns', 'USER': 'root', 'PASSWORD': 's9ustmIp7xz', 'HOST': 'db', 'PORT': '3306', } }
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
