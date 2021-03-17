@@ -20,19 +20,7 @@ python manage.py collectstatic
 
 Pull source code from gitlab
 
-Edit file setting.py và sửa phần database theo thông số bên dưới (giống với user và password được định nghĩa trong file docker-compose.yml)
-
-> DATABASES = {  
->     'default': {
->         'ENGINE': 'django.db.backends.mysql', 
->         'NAME': 'qlns',
->         'USER': 'root',
->         'PASSWORD': 's9ustmIp7xz',
->         'HOST': 'db',
->         'PORT': '3306',
->     }
-> }
-
+Rename file setting.example.py thành setting.py
 
 Vào thư mục gốc của dự án đã clone về.
 **Chạy lệnh bên dưới:**
