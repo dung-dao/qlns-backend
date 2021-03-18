@@ -117,7 +117,7 @@ dmypy.json
 .pyre/
 
 #setting.py
-qlns/settings.py
+#qlns/settings.py
 
 #database
 db_data/
