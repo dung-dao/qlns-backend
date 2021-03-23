@@ -1,4 +1,6 @@
 from django.contrib import admin
-from django.contrib.auth.models import User
+from qlns.apps.authentication import models
 
 # Register your models here.
+admin.site.register(models.Employee)
+admin.site.register(models.Country)
