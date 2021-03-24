@@ -1,9 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-
-
-class Country(models.Model):
-    name = models.CharField(max_length=100, unique=True)
+from .country import Country
 
 
 class Employee(models.Model):
