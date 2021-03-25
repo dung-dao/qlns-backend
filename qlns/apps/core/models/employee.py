@@ -39,3 +39,12 @@ class Employee(models.Model):
         Country, related_name='employees', null=True, on_delete=models.SET_NULL)
     supervisor = models.ForeignKey(
         'self', related_name='employee', null=True, on_delete=models.SET_NULL)
+
+    def get_role(self):
+        if self.user.is_superuser:
+            return "admin".upper()
+        g = self.user.groups.first()
+        if g is not None:
+            return g.name.upper()
+        else:
+            return "N/A"

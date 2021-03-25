@@ -10,6 +10,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
         queryset=Employee.objects.all(), allow_null=True)
     country = serializers.PrimaryKeyRelatedField(
         queryset=Country.objects.all(), allow_null=True)
+    role = serializers.CharField(source="get_role", read_only=True)
 
     class Meta:
         model = Employee
