@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
 
     'qlns.apps.authentication',
+    'qlns.apps.core',
 ]
 
 MIDDLEWARE = [

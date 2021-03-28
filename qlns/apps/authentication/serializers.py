@@ -1,16 +1,15 @@
-from rest_framework.serializers import ModelSerializer
-from django.contrib.auth.models import Group, Permission
-import qlns.apps.authentication.serializers as m_serializers
+from rest_framework import serializers
+from django.contrib.auth.models import Group, Permission, User
 
 
-class PermissionSerializer(ModelSerializer):
+class PermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Permission
         fields = ['id', 'name', 'codename']
 
 
-class GroupSerializer(ModelSerializer):
-    permissions = m_serializers.PermissionSerializer(many=True)
+class GroupSerializer(serializers.ModelSerializer):
+    permissions = PermissionSerializer(many=True)
 
     class Meta:
         model = Group
@@ -51,3 +50,41 @@ class GroupSerializer(ModelSerializer):
 
         instance.save()
         return instance
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'username', 'password', 'first_name',
+                  'last_name', 'date_joined', 'is_staff']
+        read_only_fields = ['date_joined', 'id']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        username = validated_data['username']
+        is_staff = validated_data['is_staff']
+        is_superuser = validated_data['is_superuser']
+        password = validated_data['password']
+
+        user = User(username=username, is_staff=is_staff,
+                    is_superuser=is_superuser)
+        user.set_password(password)
+        user.save()
+        return user
+
+    def update(self, instance, validated_data):
+        if 'username' in validated_data:
+            instance.username = validated_data.get(
+                'username', instance.username)
+
+        if 'password' in validated_data:
+            instance.username = validated_data.get(
+                'username', instance.username)
+
+        if 'is_staff' in validated_data:
+            instance.username = validated_data.get(
+                'username', instance.username)
+
+        if 'is_superuser' in validated_data:
+            instance.username = validated_data.get(
+                'username', instance.username)

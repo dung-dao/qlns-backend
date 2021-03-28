@@ -124,3 +124,4 @@ db_data/
 
 #debug file
 .idea/
+.vscode/
