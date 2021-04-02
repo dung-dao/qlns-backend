@@ -1,2 +1,6 @@
 from .country_serializer import CountrySerializer
 from .employee_serializer import EmployeeSerializer
+
+# PIM
+from .contact_info_serializer import ContactInfoSerializer
+from .emergency_contact_serializer import EmergencyContactSerializer

@@ -6,10 +6,10 @@ from django.contrib.auth.models import User
 
 class EmployeeSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=False)
-    supervisor = serializers.PrimaryKeyRelatedField(
-        queryset=Employee.objects.all(), allow_null=True)
-    country = serializers.PrimaryKeyRelatedField(
-        queryset=Country.objects.all(), allow_null=True)
+    nationality = serializers.SlugRelatedField(
+        slug_field='name',
+        queryset=Country.objects.all(),
+        allow_null=True, required=False)
     role = serializers.CharField(source="get_role", read_only=True)
 
     class Meta:
@@ -17,27 +17,28 @@ class EmployeeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
+        # Create user
         user_data = validated_data.pop('user')
         user = User(
             username=user_data['username'],
-            email=user_data['email'],
-            first_name=user_data['first_name'],
-            last_name=user_data['last_name'],
             is_staff=user_data['is_staff'],
-            is_superuser=user_data['is_superuser'],
+            is_superuser=False,
         )
 
         user.set_password(user_data['password'])
-
         user.save()
 
+        # Create employee
         employee = Employee(**validated_data)
+
+        # Associate
         employee.user = user
 
         employee.save()
         return employee
 
     def update(self, instance, validated_data):
+        # Update user
         user = None
         if 'user' in validated_data:
             user_data = validated_data.pop('user')
@@ -49,8 +50,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
                     user.set_password(user_data['password'])
             user.save()
 
-        for key in validated_data:
-            setattr(instance, key, validated_data[key])
+        super(EmployeeSerializer, self).update(instance, validated_data)
 
         instance.save()
         return instance

@@ -16,33 +16,28 @@ class Employee(models.Model):
         Single = "Single"
         Married = "Married"
 
-    # Fields
-    date_of_birth = models.DateField()
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField()
+
     gender = models.CharField(
-        max_length=10, choices=Gender.choices)
+        max_length=10, choices=Gender.choices, blank=True)
     marital_status = models.CharField(
-        max_length=10, choices=MaritalStatus.choices)
-
-    street = models.CharField(max_length=100, blank=True)
-    city = models.CharField(max_length=100, blank=True)
-    province = models.CharField(max_length=100, blank=True)
-
-    home_telephone = models.CharField(max_length=100, blank=True)
-    mobile = models.CharField(max_length=100, blank=True)
-
-    work_telephone = models.CharField(max_length=100, blank=True)
-    work_email = models.CharField(max_length=100, blank=True)
+        max_length=10, choices=MaritalStatus.choices, blank=True)
+    date_of_birth = models.DateField(blank=True, null=True)
+    personal_tax_id = models.CharField(max_length=50, blank=True)
+    nationality = models.ForeignKey(
+        to='Country', on_delete=models.SET_NULL, null=True)
+    phone = models.CharField(max_length=20, blank=True)
+    social_insurance = models.CharField(max_length=20, blank=True)
+    health_insurance = models.CharField(max_length=20, blank=True)
 
     # related data
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    country = models.ForeignKey(
-        Country, related_name='employees', null=True, on_delete=models.SET_NULL)
-    supervisor = models.ForeignKey(
-        'self', related_name='employee', null=True, on_delete=models.SET_NULL)
 
     def get_role(self):
         if self.user.is_superuser:
-            return "admin".upper()
+            return "superuser".upper()
         g = self.user.groups.first()
         if g is not None:
             return g.name.upper()
