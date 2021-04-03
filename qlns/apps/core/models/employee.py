@@ -11,10 +11,15 @@ class Employee(models.Model):
     class Gender(models.TextChoices):
         Male = 'Male'
         Female = 'Female'
+        Other = 'Other'
 
     class MaritalStatus(models.TextChoices):
         Single = "Single"
         Married = "Married"
+        Divorced = 'Divorced'
+        Seperated = 'Seperated'
+        Widowed = 'Widowed'
+        Other = 'Other'
 
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)

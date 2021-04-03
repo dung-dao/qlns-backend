@@ -55,19 +55,16 @@ class GroupSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'email', 'username', 'password', 'first_name',
-                  'last_name', 'date_joined', 'is_staff']
-        read_only_fields = ['date_joined', 'id']
+        fields = ['id', 'username', 'password', 'is_staff', 'date_joined', 'is_active']
+        read_only_fields = ['date_joined', 'id', 'is_active']
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
         username = validated_data['username']
         is_staff = validated_data['is_staff']
-        is_superuser = validated_data['is_superuser']
         password = validated_data['password']
 
-        user = User(username=username, is_staff=is_staff,
-                    is_superuser=is_superuser)
+        user = User(username=username, is_staff=is_staff, is_superuser=False)
         user.set_password(password)
         user.save()
         return user
@@ -78,13 +75,10 @@ class UserSerializer(serializers.ModelSerializer):
                 'username', instance.username)
 
         if 'password' in validated_data:
-            instance.username = validated_data.get(
-                'username', instance.username)
+            instance.set_password(validated_data['validated_data'])
 
         if 'is_staff' in validated_data:
-            instance.username = validated_data.get(
-                'username', instance.username)
+            instance.is_staff = validated_data.get(
+                'is_staff', instance.is_staff)
 
-        if 'is_superuser' in validated_data:
-            instance.username = validated_data.get(
-                'username', instance.username)
+        return instance
