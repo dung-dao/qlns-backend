@@ -1,6 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import User
 from .country import Country
+import uuid
+import os
+
+
+def upload_to(instance, filename):
+    _, file_extension = os.path.splitext('/'+filename)
+    return 'avatars/' + str(uuid.uuid4()) + file_extension
 
 
 class Employee(models.Model):
@@ -36,6 +43,9 @@ class Employee(models.Model):
     phone = models.CharField(max_length=20, blank=True)
     social_insurance = models.CharField(max_length=20, blank=True)
     health_insurance = models.CharField(max_length=20, blank=True)
+
+    avatar = models.ImageField(
+        upload_to=upload_to, default='avatars/default_avatar.svg')
 
     # related data
     user = models.OneToOneField(User, on_delete=models.CASCADE)
