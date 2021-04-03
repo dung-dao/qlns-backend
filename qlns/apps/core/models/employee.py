@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 from .country import Country
 import uuid
 import os
@@ -58,3 +58,7 @@ class Employee(models.Model):
             return g.name.upper()
         else:
             return "N/A"
+
+    def get_permissions(self):
+        permissions = self.user.get_all_permissions()
+        return permissions
