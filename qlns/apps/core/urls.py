@@ -4,8 +4,6 @@ from qlns.apps.core import views as core_views
 
 router = routers.SimpleRouter()
 
-router.register(r'auth/current_user', core_views.ProfileView, basename='profile')
-
 router.register(r'countries', core_views.CountryView, basename='country')
 router.register(r'employees', core_views.EmployeeView, basename='employee')
 
@@ -19,5 +17,6 @@ pim_router.register(
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('', include(pim_router.urls))
+    path('', include(pim_router.urls)),
+    path('auth/current_user/', core_views.ProfileView.as_view())
 ]
