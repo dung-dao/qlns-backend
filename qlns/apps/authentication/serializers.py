@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 from django.contrib.auth.models import Group, Permission, User
 
@@ -82,3 +83,10 @@ class UserSerializer(serializers.ModelSerializer):
                 'is_staff', instance.is_staff)
 
         return instance
+
+
+class ProfileUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'is_staff', 'date_joined']
+        read_only_fields = ['date_joined', 'id', 'is_staff']

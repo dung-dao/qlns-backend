@@ -18,5 +18,7 @@ pim_router.register(
 urlpatterns = [
     path('', include(router.urls)),
     path('', include(pim_router.urls)),
-    path('auth/current_user/', core_views.ProfileView.as_view())
+    path('auth/current_user/', core_views.ProfileView.as_view()),
+    path('auth/current_user/password', core_views.ChangePasswordView.as_view()),
+    path('auth/current_user/avatar', core_views.ChangeAvatarView.as_view())
 ]

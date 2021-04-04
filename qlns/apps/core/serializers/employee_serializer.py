@@ -44,6 +44,8 @@ class EmployeeSerializer(serializers.ModelSerializer):
             user_data = validated_data.pop('user')
             user = instance.user
             for key in user_data:
+                if key == 'id':
+                    continue
                 if key != "password":
                     setattr(user, key, user_data[key])
                 else:

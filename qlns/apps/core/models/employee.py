@@ -48,7 +48,7 @@ class Employee(models.Model):
         upload_to=upload_to, default='avatars/default_avatar.svg')
 
     # related data
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee')
 
     def get_role(self):
         if self.user.is_superuser:
