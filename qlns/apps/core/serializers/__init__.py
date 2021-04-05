@@ -6,3 +6,4 @@ from .curent_user_serializer import CurrentUserSerializer
 # PIM
 from .contact_info_serializer import ContactInfoSerializer
 from .emergency_contact_serializer import EmergencyContactSerializer
+from .bank_info_serializer import BankInfoSerializer
