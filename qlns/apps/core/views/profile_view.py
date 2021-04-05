@@ -51,7 +51,7 @@ class ChangePasswordView(views.APIView):
 class ChangeAvatarView(views.APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
-    def put(self, request):
+    def post(self, request):
         if 'avatar' not in request.data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
