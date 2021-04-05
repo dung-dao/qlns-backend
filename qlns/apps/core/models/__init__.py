@@ -1,4 +1,7 @@
+# Admin
 from .country import Country
+from .department import Department
+
 from .employee import Employee
 
 # PIM

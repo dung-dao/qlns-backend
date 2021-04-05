@@ -6,6 +6,7 @@ from qlns.apps.core import views as core_views
 router = routers.SimpleRouter()
 
 router.register(r'countries', core_views.CountryView, basename='country')
+router.register(r'departments', core_views.DepartmentView, basename='department')
 router.register(r'employees', core_views.EmployeeView, basename='employee')
 
 pim_router = routers.NestedSimpleRouter(router, r'employees', lookup='employee')
