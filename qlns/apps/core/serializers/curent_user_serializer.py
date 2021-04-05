@@ -1,44 +1,29 @@
-from rest_framework import serializers
-from qlns.apps.authentication.serializers import UserSerializer
 from qlns.apps.core.models import Employee, Country
-from django.contrib.auth.models import User
+from qlns.apps.authentication.serializers import ProfileUserSerializer
+from rest_framework import serializers
 
 
-class EmployeeSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=False)
+class CurrentUserSerializer(serializers.ModelSerializer):
+    user = ProfileUserSerializer(read_only=True)
     nationality = serializers.SlugRelatedField(
         slug_field='name',
         queryset=Country.objects.all(),
         allow_null=True, required=False)
     role = serializers.CharField(source="get_role", read_only=True)
+    permissions = serializers.ListField(
+        child=serializers.CharField(max_length=255),
+        source='get_permissions',
+        read_only=True,
+    )
 
     class Meta:
-        model = Employee
         fields = '__all__'
+        model = Employee
 
     def create(self, validated_data):
-        # Create user
-        user_data = validated_data.pop('user')
-        user = User(
-            username=user_data['username'],
-            is_staff=user_data['is_staff'],
-            is_superuser=False,
-        )
-
-        user.set_password(user_data['password'])
-        user.save()
-
-        # Create employee
-        employee = Employee(**validated_data)
-
-        # Associate
-        employee.user = user
-
-        employee.save()
-        return employee
+        raise Exception('Create profile not allowed')
 
     def update(self, instance, validated_data):
-        # Update user
         user = None
         if 'user' in validated_data:
             user_data = validated_data.pop('user')
@@ -52,7 +37,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
                     user.set_password(user_data['password'])
             user.save()
 
-        super(EmployeeSerializer, self).update(instance, validated_data)
+        super(CurrentUserSerializer, self).update(instance, validated_data)
 
         instance.save()
         return instance

@@ -1,13 +1,24 @@
 from django.urls import path, include
-from rest_framework_simplejwt import views as jwt_views
-from rest_framework.routers import DefaultRouter
-from qlns.apps.core.views import EmployeeView, ProfileView, CountryView
+from rest_framework_nested import routers
+from qlns.apps.core import views as core_views
 
-router = DefaultRouter()
-router.register(r'countries', CountryView, basename='country')
-router.register(r'employees', EmployeeView, basename='employee')
+router = routers.SimpleRouter()
+
+router.register(r'countries', core_views.CountryView, basename='country')
+router.register(r'employees', core_views.EmployeeView, basename='employee')
+
+pim_router = routers.NestedSimpleRouter(
+    router, r'employees', lookup='employee')
+
+pim_router.register(
+    'contact_info', core_views.ContactInfoView, basename='contact_info')
+pim_router.register(
+    'emergency_contact', core_views.EmergencyContactView, basename='emergency_contact')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('profile/', ProfileView.as_view()),
+    path('', include(pim_router.urls)),
+    path('auth/current_user/', core_views.ProfileView.as_view()),
+    path('auth/current_user/password', core_views.ChangePasswordView.as_view()),
+    path('auth/current_user/avatar', core_views.ChangeAvatarView.as_view())
 ]

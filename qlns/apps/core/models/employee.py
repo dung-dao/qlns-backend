@@ -1,6 +1,13 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 from .country import Country
+import uuid
+import os
+
+
+def upload_to(instance, filename):
+    _, file_extension = os.path.splitext('/'+filename)
+    return 'avatars/' + str(uuid.uuid4()) + file_extension
 
 
 class Employee(models.Model):
@@ -11,40 +18,47 @@ class Employee(models.Model):
     class Gender(models.TextChoices):
         Male = 'Male'
         Female = 'Female'
+        Other = 'Other'
 
     class MaritalStatus(models.TextChoices):
         Single = "Single"
         Married = "Married"
+        Divorced = 'Divorced'
+        Seperated = 'Seperated'
+        Widowed = 'Widowed'
+        Other = 'Other'
 
-    # Fields
-    date_of_birth = models.DateField()
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField()
+
     gender = models.CharField(
-        max_length=10, choices=Gender.choices)
+        max_length=10, choices=Gender.choices, blank=True)
     marital_status = models.CharField(
-        max_length=10, choices=MaritalStatus.choices)
+        max_length=10, choices=MaritalStatus.choices, blank=True)
+    date_of_birth = models.DateField(blank=True, null=True)
+    personal_tax_id = models.CharField(max_length=50, blank=True)
+    nationality = models.ForeignKey(
+        to='Country', on_delete=models.SET_NULL, null=True)
+    phone = models.CharField(max_length=20, blank=True)
+    social_insurance = models.CharField(max_length=20, blank=True)
+    health_insurance = models.CharField(max_length=20, blank=True)
 
-    street = models.CharField(max_length=100, blank=True)
-    city = models.CharField(max_length=100, blank=True)
-    province = models.CharField(max_length=100, blank=True)
-
-    home_telephone = models.CharField(max_length=100, blank=True)
-    mobile = models.CharField(max_length=100, blank=True)
-
-    work_telephone = models.CharField(max_length=100, blank=True)
-    work_email = models.CharField(max_length=100, blank=True)
+    avatar = models.ImageField(
+        upload_to=upload_to, default='avatars/default_avatar.svg')
 
     # related data
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    country = models.ForeignKey(
-        Country, related_name='employees', null=True, on_delete=models.SET_NULL)
-    supervisor = models.ForeignKey(
-        'self', related_name='employee', null=True, on_delete=models.SET_NULL)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee')
 
     def get_role(self):
         if self.user.is_superuser:
-            return "admin".upper()
+            return "superuser".upper()
         g = self.user.groups.first()
         if g is not None:
             return g.name.upper()
         else:
             return "N/A"
+
+    def get_permissions(self):
+        permissions = self.user.get_all_permissions()
+        return permissions
