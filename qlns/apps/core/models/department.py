@@ -10,3 +10,14 @@ class Department(models.Model):
 
     def get_employee_no(self):
         return 7
+
+    def get_manager_full_name(self):
+        if self.manager is None:
+            return ""
+        return f'{self.manager.first_name} {self.manager.last_name}'.strip()
+
+    def get_manager_avatar(self):
+        if self.manager is None:
+            return None
+
+        return self.manager.avatar
