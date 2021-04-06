@@ -23,5 +23,6 @@ urlpatterns = [
     path('', admin.site.urls),
     path('auth/', include('qlns.apps.authentication.urls')),
     path('', include('qlns.apps.core.urls')),
+    path('', include('qlns.apps.job.urls'))
 ]
-urlpatterns+= static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
