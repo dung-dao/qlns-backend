@@ -12,8 +12,8 @@ router.register(r'employees', core_views.EmployeeView, basename='employee')
 pim_router = routers.NestedSimpleRouter(router, r'employees', lookup='employee')
 profile_urlpatterns = [
     path('auth/current_user/', core_views.ProfileView.as_view()),
-    path('auth/current_user/password', core_views.ChangePasswordView.as_view()),
-    path('auth/current_user/avatar', core_views.ChangeAvatarView.as_view()),
+    path('auth/current_user/password/', core_views.ChangePasswordView.as_view()),
+    path('auth/current_user/avatar/', core_views.ChangeAvatarView.as_view()),
 ]
 
 pim_router.register('contact_info', core_views.ContactInfoView, basename='contact_info')
