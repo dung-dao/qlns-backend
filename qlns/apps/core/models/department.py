@@ -6,3 +6,7 @@ class Department(models.Model):
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True)
     manager = models.ForeignKey(
         to='Employee', null=True, on_delete=models.SET_NULL)
+    description = models.TextField(blank=True)
+
+    def get_employee_no(self):
+        return 7

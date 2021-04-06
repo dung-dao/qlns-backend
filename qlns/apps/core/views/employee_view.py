@@ -20,13 +20,13 @@ class EmployeeView(viewsets.GenericViewSet,
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             # Insert permission here
-            permission_classes = ()
+            permission_classes = (permissions.IsAuthenticated,)
         elif self.action == 'create':
-            permission_classes = ()
+            permission_classes = (permissions.IsAuthenticated,)
         elif self.action == 'set_password':
             permission_classes = (permissions.IsAuthenticated,)
         else:
-            permission_classes = ()
+            permission_classes = (permissions.IsAuthenticated,)
         return [permission() for permission in permission_classes]
 
     @action(methods=['post'], detail=True, url_path='role', permission_classes=())
@@ -47,7 +47,7 @@ class EmployeeView(viewsets.GenericViewSet,
         employee.user.save()
         return Response()
 
-    @action(methods=['put'], detail=True, url_path='avatar')
+    @action(methods=['post'], detail=True, url_path='avatar')
     def change_avatar(self, request, pk):
         if 'avatar' not in request.data:
             return Response(status=status.HTTP_400_BAD_REQUEST)

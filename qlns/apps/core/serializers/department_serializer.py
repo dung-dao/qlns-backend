@@ -18,6 +18,8 @@ class DepartmentSerializer(serializers.ModelSerializer):
     manager = serializers.PrimaryKeyRelatedField(
         read_only=False, queryset=core_models.Employee.objects.all(), required=False, allow_null=True)
 
+    employee_no = serializers.IntegerField(source='get_employee_no', read_only=True)
+
     class Meta:
         model = core_models.Department
         fields = [
@@ -25,6 +27,8 @@ class DepartmentSerializer(serializers.ModelSerializer):
             'name',
             'parent',
             'manager',
+            'description',
+            'employee_no',
         ]
 
     def create(self, validated_data):
@@ -35,16 +39,21 @@ class DepartmentSerializer(serializers.ModelSerializer):
             return super(DepartmentSerializer, self).create(validated_data)
 
     def update(self, instance, validated_data):
-        def Get_Parent(department):
+        def get_parent(department):
             return department.parent
 
-        instance.name = validated_data['name']
-        instance.manager = validated_data['manager']
-        instance.parent = validated_data['parent']
+        if 'name' in validated_data:
+            instance.name = validated_data['name']
+        if 'manager' in validated_data:
+            instance.manager = validated_data['manager']
+        if 'parent' in validated_data:
+            instance.parent = validated_data['parent']
+        if 'description' in validated_data:
+            instance.description = validated_data['description']
 
         parent = validated_data['parent']
-        while parent.parent is not None:
-            parent = Get_Parent(parent)
+        while parent is not None and parent.parent is not None:
+            parent = get_parent(parent)
             if parent.id == instance.id:
                 raise CycleParentException
 
