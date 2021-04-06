@@ -18,7 +18,10 @@ class DepartmentSerializer(serializers.ModelSerializer):
     manager = serializers.PrimaryKeyRelatedField(
         read_only=False, queryset=core_models.Employee.objects.all(), required=False, allow_null=True)
 
+    # Readonly fields
     employee_no = serializers.IntegerField(source='get_employee_no', read_only=True)
+    manager_full_name = serializers.CharField(source="get_manager_full_name", read_only=True)
+    manager_avatar = serializers.ImageField(source='get_manager_avatar', read_only=True)
 
     class Meta:
         model = core_models.Department
@@ -29,6 +32,8 @@ class DepartmentSerializer(serializers.ModelSerializer):
             'manager',
             'description',
             'employee_no',
+            'manager_full_name',
+            'manager_avatar',
         ]
 
     def create(self, validated_data):

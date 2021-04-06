@@ -3,11 +3,14 @@ from rest_framework.response import Response
 from rest_framework import status
 from qlns.apps.core import serializers as core_serializers
 from qlns.apps.core import models as core_models
+from rest_framework import permissions
 
 
 class DepartmentView(viewsets.ModelViewSet):
     serializer_class = core_serializers.DepartmentSerializer
     queryset = core_models.Department.objects.all()
+
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def create(self, request, *args, **kwargs):
         try:
