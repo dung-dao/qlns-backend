@@ -1,10 +1,11 @@
+from django.core import exceptions
+from rest_framework import permissions
+from rest_framework import status
 from rest_framework import views
-from rest_framework import  permissions
+from rest_framework.response import Response
+
 from qlns.apps.core.models import Employee
 from qlns.apps.core.serializers import CurrentUserSerializer
-from rest_framework.response import Response
-from django.core import exceptions
-from rest_framework import status
 
 
 class ProfileView(views.APIView):
@@ -13,7 +14,7 @@ class ProfileView(views.APIView):
     def get(self, request):
         try:
             employee = Employee.objects.filter(user=request.user).first()
-            serializer = CurrentUserSerializer(instance=employee)
+            serializer = CurrentUserSerializer(instance=employee, context={"request": request})
             return Response(data=serializer.data)
         except exceptions.ObjectDoesNotExist:
             return Response(data="No Profile")
@@ -57,7 +58,7 @@ class ChangeAvatarView(views.APIView):
 
         employee = request.user.employee
 
-        if employee is not  None:
+        if employee is not None:
             employee.avatar = request.data['avatar']
             employee.save()
             return Response()

@@ -23,4 +23,6 @@ pim_router.register('bank_info', core_views.BankInfoView, basename='bank_info')
 urlpatterns = [
     path('', include(router.urls)),
     path('', include(pim_router.urls)),
+    *profile_urlpatterns,
 ]
+
