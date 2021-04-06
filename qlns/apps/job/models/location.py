@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Location(models.Model):
-    name = models.CharField(max_length=150)
+    name = models.CharField(max_length=150, unique=True)
     country = models.ForeignKey(to='core.Country', on_delete=models.PROTECT)
     province = models.CharField(max_length=100)
     city = models.CharField(max_length=100)
