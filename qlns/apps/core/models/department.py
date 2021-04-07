@@ -2,7 +2,7 @@ from django.db import models
 
 
 class Department(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True)
     manager = models.ForeignKey(
         to='Employee', null=True, on_delete=models.SET_NULL)
