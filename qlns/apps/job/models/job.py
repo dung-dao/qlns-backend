@@ -8,6 +8,13 @@ class Job(models.Model):
         active = 'Active'
         on_leave = 'On Leave'
 
+    class JobEvent(models.TextChoices):
+        error_correction = 'Error Correction'
+        joined = 'Joined'
+        location_changed = 'Location Changed'
+        promoted = 'Promoted'
+        other = 'Other'
+
     owner = models.ForeignKey(
         to='core.Employee', on_delete=models.CASCADE, related_name='job_history')
     department = models.ForeignKey(to='core.Department', on_delete=models.SET_NULL, null=True, related_name='jobs')
@@ -20,3 +27,6 @@ class Job(models.Model):
     probation_end_date = models.DateField(blank=True, null=True)
     contract_start_date = models.DateField(blank=True, null=True)
     contract_end_date = models.DateField(blank=True, null=True)
+
+    event = models.CharField(max_length=20, choices=JobEvent.choices)
+    timestamp = models.DateTimeField(auto_now_add=True)
