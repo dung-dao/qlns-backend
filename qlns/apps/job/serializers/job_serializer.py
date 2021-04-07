@@ -20,3 +20,9 @@ class JobSerializer(serializers.ModelSerializer):
     location = serializers.SlugRelatedField('name',
                                             queryset=job_models.Location.objects.all(),
                                             allow_null=True)
+    employment_status = serializers.SlugRelatedField('name',
+                                                     queryset=job_models.EmploymentStatus.objects.all(),
+                                                     allow_null=False)
+    event = serializers.SlugRelatedField('name',
+                                         queryset=job_models.JobEvent.objects.all(),
+                                         allow_null=False)

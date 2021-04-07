@@ -3,3 +3,5 @@ from .location_view import LocationView
 from .work_shift_view import WorkShiftView
 
 from .job_view import JobView
+from .employment_status_view import EmploymentStatusView
+from .job_event_view import JobEventView
