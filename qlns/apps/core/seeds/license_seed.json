@@ -1,0 +1,16 @@
+[
+  {
+    "model": "core.License",
+    "pk": 1,
+    "fields": {
+      "name": "Chứng minh nhân dân"
+    }
+  },
+  {
+    "model": "core.License",
+    "pk": 2,
+    "fields": {
+      "name": "Hộ chiếu"
+    }
+  }
+]

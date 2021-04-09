@@ -1,0 +1,23 @@
+[
+  {
+    "model": "core.Skill",
+    "pk": 1,
+    "fields": {
+      "name": "Tin học văn phòng"
+    }
+  },
+  {
+    "model": "core.Skill",
+    "pk": 2,
+    "fields": {
+      "name": "Lập trình web"
+    }
+  },
+  {
+    "model": "core.Skill",
+    "pk": 3,
+    "fields": {
+      "name": "Lập trình di động"
+    }
+  }
+]

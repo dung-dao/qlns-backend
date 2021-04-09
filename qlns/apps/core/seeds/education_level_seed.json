@@ -1,0 +1,37 @@
+[
+  {
+    "model": "core.EducationLevel",
+    "pk": 1,
+    "fields": {
+      "name": "Đại học"
+    }
+  },
+  {
+    "model": "core.EducationLevel",
+    "pk": 2,
+    "fields": {
+      "name": "Thạc sỹ"
+    }
+  },
+  {
+    "model": "core.EducationLevel",
+    "pk": 3,
+    "fields": {
+      "name": "Tiến sỹ"
+    }
+  },
+  {
+    "model": "core.EducationLevel",
+    "pk": 4,
+    "fields": {
+      "name": "Cao Đẳng"
+    }
+  },
+  {
+    "model": "core.EducationLevel",
+    "pk": 3,
+    "fields": {
+      "name": "Trung Cấp"
+    }
+  }
+]
