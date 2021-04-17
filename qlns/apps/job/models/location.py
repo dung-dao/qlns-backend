@@ -11,3 +11,10 @@ class Location(models.Model):
     phone = models.CharField(max_length=20, blank=True)
     fax = models.CharField(max_length=100, blank=True)
     note = models.TextField(blank=True)
+
+    radius = models.FloatField(default=100)
+    allow_outside = models.BooleanField(default=True)
+    accurate_address = models.CharField(max_length=1000, blank=True)
+
+    lat = models.FloatField(blank=True, null=True)
+    lng = models.FloatField(blank=True, null=True)
