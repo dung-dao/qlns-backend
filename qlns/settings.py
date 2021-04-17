@@ -44,6 +44,7 @@ INSTALLED_APPS = [
 
     'qlns.apps.authentication',
     'qlns.apps.core',
+    'qlns.apps.job',
 ]
 
 MIDDLEWARE = [
