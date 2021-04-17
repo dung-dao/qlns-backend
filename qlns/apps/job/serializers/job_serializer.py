@@ -14,9 +14,6 @@ class JobSerializer(serializers.ModelSerializer):
     job_title = serializers.SlugRelatedField('name',
                                              queryset=job_models.JobTitle.objects.all(),
                                              allow_null=True)
-    work_shift = serializers.SlugRelatedField('name',
-                                              queryset=job_models.WorkShift.objects.all(),
-                                              allow_null=True)
     location = serializers.SlugRelatedField('name',
                                             queryset=job_models.Location.objects.all(),
                                             allow_null=True)

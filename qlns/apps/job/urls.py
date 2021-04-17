@@ -6,7 +6,6 @@ from qlns.apps.core.urls import router as core_router
 router = routers.SimpleRouter()
 router.register('job_titles', job_views.JobTitleView, basename='job_title')
 router.register('locations', job_views.LocationView, basename='location')
-router.register('work_shifts', job_views.WorkShiftView, basename='work_shift')
 router.register('employment_statuses', job_views.EmploymentStatusView, basename='employment_status')
 router.register('job_events', job_views.JobEventView, basename='job_event')
 
