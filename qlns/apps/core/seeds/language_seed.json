@@ -1,0 +1,44 @@
+[
+  {
+    "model": "core.Language",
+    "pk": 1,
+    "fields": {
+      "name": "Tiếng Anh"
+    }
+  },
+  {
+    "model": "core.Language",
+    "pk": 2,
+    "fields": {
+      "name": "Tiếng Việt"
+    }
+  },
+  {
+    "model": "core.Language",
+    "pk": 3,
+    "fields": {
+      "name": "Tiếng Nhật"
+    }
+  },
+  {
+    "model": "core.Language",
+    "pk": 4,
+    "fields": {
+      "name": "Tiếng Đức"
+    }
+  },
+  {
+    "model": "core.Language",
+    "pk": 5,
+    "fields": {
+      "name": "Tiếng Hàn"
+    }
+  },
+  {
+    "model": "core.Language",
+    "pk": 6,
+    "fields": {
+      "name": "Tiếng Trung Quốc"
+    }
+  }
+]
