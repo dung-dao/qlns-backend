@@ -4,6 +4,8 @@ from .country import Country
 import uuid
 import os
 
+from ...attendance.models import EmployeeSchedule
+
 
 def upload_to(instance, filename):
     _, file_extension = os.path.splitext('/'+filename)
@@ -62,3 +64,13 @@ class Employee(models.Model):
     def get_permissions(self):
         permissions = self.user.get_all_permissions()
         return permissions
+
+    def get_current_schedule(self):
+        em_schedule = EmployeeSchedule.objects.filter(owner=self.pk)
+        em_schedule = em_schedule.first()
+        return None if em_schedule is None else em_schedule.schedule
+
+    def get_job_location(self):
+        # TODO: FIX
+        current_job = self.job_history.order_by('-timestamp').first()
+        return None if current_job is None else current_job.location

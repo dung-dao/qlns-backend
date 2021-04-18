@@ -18,3 +18,9 @@ class Location(models.Model):
 
     lat = models.FloatField(blank=True, null=True)
     lng = models.FloatField(blank=True, null=True)
+
+    def check_inside(self, lat, lng):
+        if lat is None or lng is None:
+            return False
+        # TODO: Implement this
+        return True
