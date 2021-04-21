@@ -12,9 +12,10 @@ class Location(models.Model):
     fax = models.CharField(max_length=100, blank=True)
     note = models.TextField(blank=True)
 
-    radius = models.FloatField(default=100)
-    allow_outside = models.BooleanField(default=True)
-    accurate_address = models.CharField(max_length=1000, blank=True)
+    enable_geofencing = models.BooleanField(default=False)
 
+    allow_outside = models.BooleanField(null=True)
+    accurate_address = models.CharField(max_length=1000, blank=True, null=True)
     lat = models.FloatField(blank=True, null=True)
     lng = models.FloatField(blank=True, null=True)
+    radius = models.FloatField(null=True)
