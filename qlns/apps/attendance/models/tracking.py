@@ -18,6 +18,8 @@ class Tracking(models.Model):
     check_in_note = models.TextField(null=True)
     check_out_note = models.TextField(null=True)
 
+    location = models.ForeignKey(to='job.Location', on_delete=models.SET_NULL, null=True)
+
     def get_ot_hours(self):
         try:
             if self.overtime_type is None:

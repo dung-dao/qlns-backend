@@ -71,6 +71,5 @@ class Employee(models.Model):
         return None if em_schedule is None else em_schedule.schedule
 
     def get_job_location(self):
-        # TODO: FIX
         current_job = self.job_history.order_by('-timestamp').first()
         return None if current_job is None else current_job.location

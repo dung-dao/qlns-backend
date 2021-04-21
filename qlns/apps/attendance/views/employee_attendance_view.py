@@ -19,19 +19,23 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
     serializer_class = AttendanceSerializer
     permission_classes = (IsAuthenticated,)
 
+    def get_queryset(self):
+        return self.queryset.filter(owner=self.kwargs['employee_pk'])
+
     # employee
     @action(detail=False, methods=['post'])
     @atomic()
     def check_in(self, request, employee_pk=None):
-        # TODO: Validate
-        # Employee info
         employee = Employee.objects.get(pk=employee_pk)
-
         schedule = employee.get_current_schedule()
+
+        # NO SCHEDULE EXCEPTION
+        if schedule is None:
+            return Response(status=status.HTTP_403_FORBIDDEN, data="NO_SCHEDULE")
 
         today = date.today()
 
-        # Get today's attendance
+        # Get today attendance
         attendance = Attendance.objects.filter(
             date__year=today.year,
             date__month=today.month,
@@ -41,15 +45,14 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
             schedule=schedule
         ).first()
 
-        # TODO: Check if there is a tracking which is not checked out => BAD REQUEST
+        # ALREADY_CHECK_IN_EXCEPTION
         if attendance is not None:
             log = attendance.tracking_data.filter(check_out_time=None).first()
             if log is not None:
                 set_rollback(True)
-                return Response(status=status.HTTP_400_BAD_REQUEST, data="Checkout first")
+                return Response(status=status.HTTP_400_BAD_REQUEST, data="ALREADY_CHECK_IN")
 
-        # Tạo attendance mới nếu chưa có
-        if attendance is None:
+        else:
             attendance = Attendance(
                 owner=employee,
                 schedule=schedule,
@@ -57,36 +60,49 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
                 status=Attendance.AttendanceLogStatus.Pending
             )
 
+        # SAVE ATTENDANCE
         attendance.save()
 
         # Get OvertimeType
-        overtime_type = get_object_or_404(OvertimeType, name=request.data['overtime_type'])
+        # overtime_type = get_object_or_404(OvertimeType, name=request.data['overtime_type'])
+        overtime_type = None
+        overtime_type_name = request.data.get('overtime_type', None)
 
-        # Handle location
-        # TODO: CHECK IF ALLOW OUTSIDE
+        if overtime_type_name is None:
+            overtime_type = None
+        else:
+            overtime_type = get_object_or_404(OvertimeType, name=overtime_type_name)
+
+        # TODO: Check valid OT (not in schedule)
+
+        # Get location
         location = employee.get_job_location()
+        if location is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="NO_JOB")
 
-        check_in_outside = False
         check_in_lat = request.data.get('check_in_lat', None)
         check_in_lng = request.data.get('check_in_lng', None)
+        check_in_note = request.data.get('check_in_note', None)
 
-        if not location.allow_outside:
+        check_in_outside = None
+
+        if location.enable_geofencing:
+            if check_in_lat is None or check_in_lng is None:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data="Geo Info required")
+
             center = (location.lat, location.lng)
-
-            if (check_in_lat is None) or (check_in_lng is None):
-                set_rollback(True)
-                return Response(status=status.HTTP_400_BAD_REQUEST, data="Location required")
-
             actual_position = (check_in_lat, check_in_lng)
+
             dis = distance.distance(center, actual_position).m
-            if dis > location.radius:
-                set_rollback(True)
-                return Response(status=status.HTTP_400_BAD_REQUEST, data="Outside working zone")
 
-        # TODO: Check invalid OT
+            check_in_outside = dis > location.radius
 
-        # Create Tracking
-        # Tạo Tracking mới, nhập thông tin checkin
+            if check_in_outside and check_in_note is None:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data="Check in outside require check_in_note")
+        else:
+            check_in_outside = None
+
+        # Create Tracking info
         tracking = Tracking(
             attendance=attendance,
             overtime_type=overtime_type,
@@ -98,6 +114,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
             check_in_outside=check_in_outside,
 
             check_in_note=request.data.get('check_in_note', None),
+            location=location
         )
 
         tracking.save()
@@ -106,8 +123,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
     @atomic()
     @action(detail=False, methods=['post'])
     def check_out(self, request, employee_pk):
-        # Nhập thông tin checkout
-        employee = Employee.objects.get(pk=employee_pk)
+        employee = get_object_or_404(Employee, pk=employee_pk)
 
         # Get attendance
         today = date.today()
@@ -118,47 +134,52 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
 
             owner=employee_pk
         ).first()
+
+        # TODO: refactor this later
         if attendance is None:
-            set_rollback(True)
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="NOT_CHECK_IN_YET")
 
         tracking = attendance.tracking_data.filter(check_out_time=None).first()
         if tracking is None:
-            set_rollback(True)
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        # TODO: CHECK OUTSIDE
-        check_out_outside = False
-
-        location = employee.get_job_location()
-
+        # TODO: CHECK OUT OUTSIDE
         check_out_lat = request.data.get('check_out_lat', None)
         check_out_lng = request.data.get('check_out_lng', None)
+        check_out_note = request.data.get('check_out_note', tracking.check_out_note)
 
-        if not location.allow_outside:
+        check_out_outside = None
+
+        location = employee.get_job_location()
+        if location is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="NO_JOB")
+
+        if location.enable_geofencing:
+            if check_out_lat is None or check_out_lng is None:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data="Geo Info required")
+
             center = (location.lat, location.lng)
-
-            if (check_out_lat is None) or (check_out_lng is None):
-                set_rollback(True)
-                return Response(status=status.HTTP_400_BAD_REQUEST, data="Location required")
-
             actual_position = (check_out_lat, check_out_lng)
-            dis = distance.distance(center, actual_position).m
-            if dis > location.radius:
-                set_rollback(True)
-                return Response(status=status.HTTP_400_BAD_REQUEST, data="Outside working zone")
 
-        # Checkout
+            dis = distance.distance(center, actual_position).m
+
+            check_out_outside = dis > location.radius
+
+            if check_out_outside and check_out_note is None:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data="Check out outside require check_out_note")
+        else:
+            check_out_outside = None
+
+        # Check Out
         tracking.check_out_time = datetime.utcnow()
         tracking.check_out_lat = check_out_lat
         tracking.check_out_lng = check_out_lng
+        tracking.check_out_note = check_out_note
         tracking.check_out_outside = check_out_outside
-        tracking.check_out_note = request.data.get('check_out_note', tracking.check_out_note)
-        tracking.save()
-        # Hệ thống sẽ tự checkout mỗi khi hết ca làm việc, nếu sau đó checkin thì phải yêu cầu OT
 
-        tracking_data = attendance.tracking_data.all()
-        # Tính toán lại actual work, OT hour của attendance
+        tracking.save()
+
+        # Calculate work hours
         attendance.calculate_work_hours()
         attendance.save()
         return Response()
