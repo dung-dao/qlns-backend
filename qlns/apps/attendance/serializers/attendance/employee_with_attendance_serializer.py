@@ -19,7 +19,15 @@ class FilteredAttendanceListSerializer(serializers.ListSerializer):
 class FilteredAttendanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attendance
-        fields = ('id', 'owner', 'date', 'actual_work_hours', 'ot_work_hours',
+        fields = ('id', 'owner', 'date',
+                  'actual_work_hours',
+                  'actual_hours_modified',
+                  'actual_hours_modification_note',
+
+                  'ot_work_hours',
+                  'ot_hours_modified',
+                  'ot_hours_modification_note',
+
                   'reviewed_by', 'confirmed_by', 'status',)
         list_serializer_class = FilteredAttendanceListSerializer
     # tracking_data = TrackingSerializer(read_only=True, many=True)

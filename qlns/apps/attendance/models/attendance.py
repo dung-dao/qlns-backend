@@ -16,8 +16,15 @@ class Attendance(models.Model):
 
     schedule = models.ForeignKey(to='Schedule', on_delete=models.PROTECT)
     date = models.DateField()
+
+    # Actual Working Hours
     actual_work_hours = models.FloatField(default=0)
+    actual_hours_modified = models.BooleanField(default=False)
+    actual_hours_modification_note = models.TextField(null=True)
+
     ot_work_hours = models.FloatField(default=0)
+    ot_hours_modified = models.BooleanField(default=False)
+    ot_hours_modification_note = models.TextField(null=True)
 
     status = models.CharField(max_length=15, choices=AttendanceLogStatus.choices, default='Pending')
 

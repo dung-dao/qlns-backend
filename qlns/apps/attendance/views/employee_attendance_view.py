@@ -11,6 +11,8 @@ from rest_framework.response import Response
 
 from qlns.apps.attendance.models import Attendance, Tracking, OvertimeType
 from qlns.apps.attendance.serializers.attendance import AttendanceSerializer
+from qlns.apps.attendance.serializers.attendance.edit_actual_serializer import EditActualSerializer
+from qlns.apps.attendance.serializers.attendance.edit_overtime_serializer import EditOvertimeSerializer
 from qlns.apps.core.models import Employee
 
 
@@ -184,12 +186,31 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         attendance.save()
         return Response()
 
-    @action(detail=True)
+    @action(detail=True, methods=['post'])
+    def revert(self, request, employee_pk, pk):
+        employee = Employee.objects.get(pk=employee_pk)
+        attendance = employee.attendance.filter(pk=pk).first()
+        if attendance is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if attendance.status == Attendance.AttendanceLogStatus.Pending or \
+                attendance.status == Attendance.AttendanceLogStatus.Confirmed:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        attendance.status = Attendance.AttendanceLogStatus.Pending
+        attendance.reviewed_by = request.user
+
+        return Response()
+
+    @action(detail=True, methods=['post'])
     def reject(self, request, employee_pk, pk):
         employee = Employee.objects.get(pk=employee_pk)
         attendance = employee.attendance.filter(pk=pk).first()
         if attendance is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if attendance.status != Attendance.AttendanceLogStatus.Pending:
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         attendance.status = Attendance.AttendanceLogStatus.Rejected
         attendance.reviewed_by = request.user
@@ -203,6 +224,9 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         attendance = employee.attendance.filter(pk=pk).first()
         if attendance is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if attendance.status != Attendance.AttendanceLogStatus.Pending:
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         attendance.status = Attendance.AttendanceLogStatus.Approved
         attendance.reviewed_by = request.user.employee
@@ -221,9 +245,60 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         if attendance is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+        if attendance.status == Attendance.AttendanceLogStatus.Pending:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="Approve or reject first")
+
         attendance.status = Attendance.AttendanceLogStatus.Confirmed
         attendance.confirmed_by = request.user.employee
 
         attendance.save()
 
         return Response()
+
+    @action(detail=True, methods=['post'])
+    def edit_actual_hours(self, request, employee_pk, pk):
+        employee = Employee.objects.get(pk=employee_pk)
+        attendance = employee.attendance.filter(pk=pk).first()
+
+        # Validate
+        if attendance is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if attendance.status == Attendance.AttendanceLogStatus.Confirmed:
+            return Response(status=status.HTTP_403_FORBIDDEN, data="Cannot edit confirmed attendance")
+
+        serializer = EditActualSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
+
+        attendance.actual_work_hours = serializer.validated_data.get('actual_work_hours')
+        attendance.actual_hours_modified = True
+        attendance.actual_hours_modification_note = serializer.validated_data.get('actual_hours_modification_note')
+
+        attendance.save()
+
+        return Response(data=AttendanceSerializer(attendance).data)
+
+    @action(detail=True, methods=['post'])
+    def edit_overtime_hours(self, request, employee_pk, pk):
+        employee = Employee.objects.get(pk=employee_pk)
+        attendance = employee.attendance.filter(pk=pk).first()
+
+        # Validate
+        if attendance is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if attendance.status == Attendance.AttendanceLogStatus.Confirmed:
+            return Response(status=status.HTTP_403_FORBIDDEN, data="Cannot edit confirmed attendance")
+
+        serializer = EditOvertimeSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
+
+        attendance.ot_work_hours = serializer.validated_data.get('ot_work_hours')
+        attendance.ot_hours_modified = True
+        attendance.ot_hours_modification_note = serializer.validated_data.get('ot_hours_modification_note')
+
+        attendance.save()
+
+        return Response(data=AttendanceSerializer(attendance).data)

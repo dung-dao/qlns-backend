@@ -21,19 +21,18 @@ class Tracking(models.Model):
     location = models.ForeignKey(to='job.Location', on_delete=models.SET_NULL, null=True)
 
     def get_ot_hours(self):
-        try:
-            if self.overtime_type is None:
-                return 0
-            else:
-                return (self.check_out_time - self.check_in_time).seconds / 3600
-        except Exception:
+        if self.check_in_time is None or self.check_out_time is None:
             return 0
 
+        duration = (self.check_out_time - self.check_in_time).seconds / 3600
+        return duration if self.overtime_type is not None else 0
+
     def get_actual_work_hours(self):
-        try:
-            return (self.check_out_time - self.check_in_time).seconds / 3600
-        except Exception:
+        if self.check_in_time is None or self.check_out_time is None:
             return 0
+
+        duration = (self.check_out_time - self.check_in_time).seconds / 3600
+        return duration if self.overtime_type is None else 0
 
     def is_inside(self):
         # TODO: implement this
