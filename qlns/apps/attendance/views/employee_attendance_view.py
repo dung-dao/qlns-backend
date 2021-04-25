@@ -1,4 +1,5 @@
 from datetime import date, datetime
+import pytz
 
 from django.db.transaction import atomic, set_rollback
 from django.shortcuts import get_object_or_404
@@ -109,7 +110,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
             attendance=attendance,
             overtime_type=overtime_type,
 
-            check_in_time=datetime.utcnow(),
+            check_in_time=datetime.utcnow().replace(tzinfo=pytz.utc),
 
             check_in_lat=check_in_lat,
             check_in_lng=check_in_lng,
@@ -173,7 +174,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
             check_out_outside = None
 
         # Check Out
-        tracking.check_out_time = datetime.utcnow()
+        tracking.check_out_time = datetime.utcnow().replace(tzinfo=pytz.utc)
         tracking.check_out_lat = check_out_lat
         tracking.check_out_lng = check_out_lng
         tracking.check_out_note = check_out_note
