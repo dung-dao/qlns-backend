@@ -33,6 +33,7 @@ pim_router.register('languages', qualifications.EmployeeLanguageView, basename='
 pim_router.register('education', qualifications.EmployeeEducationView, basename='education')
 pim_router.register('skills', qualifications.EmployeeSkillView, basename='skill')
 
+pim_router.register('dependents', core_views.DependentView, basename='dependent')
 urlpatterns = [
     path('', include(router.urls)),
     path('', include(pim_router.urls)),
