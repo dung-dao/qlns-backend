@@ -1,6 +1,6 @@
-from datetime import date, datetime
-import pytz
+from datetime import datetime
 
+import pytz
 from django.db.transaction import atomic, set_rollback
 from django.shortcuts import get_object_or_404
 from geopy import distance
@@ -36,7 +36,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         if schedule is None:
             return Response(status=status.HTTP_403_FORBIDDEN, data="NO_SCHEDULE")
 
-        today = date.today()
+        today = datetime.utcnow().replace(tzinfo=pytz.utc)
 
         # Get today attendance
         attendance = Attendance.objects.filter(
@@ -129,7 +129,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         employee = get_object_or_404(Employee, pk=employee_pk)
 
         # Get attendance
-        today = date.today()
+        today = datetime.utcnow()
         attendance = Attendance.objects.filter(
             date__year=today.year,
             date__month=today.month,

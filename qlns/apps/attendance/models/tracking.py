@@ -33,7 +33,3 @@ class Tracking(models.Model):
 
         duration = (self.check_out_time - self.check_in_time).seconds / 3600
         return duration if self.overtime_type is None else 0
-
-    def is_inside(self):
-        # TODO: implement this
-        return False
