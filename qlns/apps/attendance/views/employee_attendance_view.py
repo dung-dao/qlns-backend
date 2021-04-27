@@ -68,7 +68,6 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
 
         # Get OvertimeType
         # overtime_type = get_object_or_404(OvertimeType, name=request.data['overtime_type'])
-        overtime_type = None
         overtime_type_name = request.data.get('overtime_type', None)
 
         if overtime_type_name is None:
@@ -76,7 +75,40 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         else:
             overtime_type = get_object_or_404(OvertimeType, name=overtime_type_name)
 
-        # TODO: Check valid OT (not in schedule)
+        workday = schedule.get_work_day(today.astimezone(pytz.timezone(schedule.time_zone)).weekday())
+
+        locale_check_in_time = today.astimezone(pytz.timezone(schedule.time_zone))
+
+        locale_schedule = {
+            "morning_from": workday.morning_from.astimezone(pytz.timezone(schedule.time_zone)).replace(
+                year=locale_check_in_time.year,
+                month=locale_check_in_time.month,
+                day=locale_check_in_time.day),
+            "morning_to": workday.morning_to.astimezone(pytz.timezone(schedule.time_zone)).replace(
+                year=locale_check_in_time.year,
+                month=locale_check_in_time.month,
+                day=locale_check_in_time.day),
+            "afternoon_from": workday.afternoon_from.astimezone(pytz.timezone(schedule.time_zone)).replace(
+                year=locale_check_in_time.year,
+                month=locale_check_in_time.month,
+                day=locale_check_in_time.day),
+            "afternoon_to": workday.afternoon_to.astimezone(pytz.timezone(schedule.time_zone)).replace(
+                year=locale_check_in_time.year,
+                month=locale_check_in_time.month,
+                day=locale_check_in_time.day),
+        }
+
+        # Schedule check
+        # check_in_time = today.time()
+
+        inside_schedule = (locale_schedule["morning_from"] <= locale_check_in_time <= locale_schedule["morning_to"]) or \
+                          (locale_schedule["afternoon_from"] <= locale_check_in_time <= locale_schedule["afternoon_to"])
+
+        if not inside_schedule and overtime_type is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="OvertimeType required")
+
+        if inside_schedule and overtime_type is not None:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="Invalid Overtime request")
 
         # Get location
         location = employee.get_job_location()
@@ -110,7 +142,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
             attendance=attendance,
             overtime_type=overtime_type,
 
-            check_in_time=datetime.utcnow().replace(tzinfo=pytz.utc),
+            check_in_time=today,
 
             check_in_lat=check_in_lat,
             check_in_lng=check_in_lng,

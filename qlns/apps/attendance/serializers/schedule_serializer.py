@@ -7,9 +7,24 @@ from qlns.apps.attendance.serializers.workday_serializer import WorkdaySerialize
 class ScheduleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Schedule
-        fields = ('id', 'name', 'workdays',)
+        fields = ('id', 'name', 'workdays', 'time_zone')
 
     workdays = WorkdaySerializer(read_only=False, many=True)
+
+    def validate(self, attrs):
+        workdays = attrs.get('workdays')
+        for wd in workdays:
+            morning_from = wd.get('morning_from', None)
+            morning_to = wd.get('morning_to', None)
+            afternoon_from = wd.get('afternoon_from', None)
+            afternoon_to = wd.get('afternoon_to', None)
+
+            if morning_from is None and morning_to is not None or \
+                    afternoon_from is None and afternoon_to is not None or \
+                    morning_from.time() >= morning_to.time() or \
+                    afternoon_from.time() >= afternoon_to.time():
+                raise serializers.ValidationError('Invalid schedule')
+        return attrs
 
     def create(self, validated_data):
         workdays = validated_data.pop('workdays')
