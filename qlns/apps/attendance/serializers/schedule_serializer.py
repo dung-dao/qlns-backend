@@ -19,11 +19,16 @@ class ScheduleSerializer(serializers.ModelSerializer):
             afternoon_from = wd.get('afternoon_from', None)
             afternoon_to = wd.get('afternoon_to', None)
 
-            if morning_from is None and morning_to is not None or \
-                    afternoon_from is None and afternoon_to is not None or \
-                    morning_from.time() >= morning_to.time() or \
-                    afternoon_from.time() >= afternoon_to.time():
+            if ((morning_from is None) != (morning_to is None)) or \
+                    ((afternoon_from is None) != (afternoon_to is None)):
                 raise serializers.ValidationError('Invalid schedule')
+
+            if morning_from is not None and morning_from >= morning_to:
+                raise serializers.ValidationError('Invalid schedule')
+
+            if afternoon_from is not None and afternoon_from >= afternoon_to:
+                raise serializers.ValidationError('Invalid schedule')
+
         return attrs
 
     def create(self, validated_data):
