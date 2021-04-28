@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.db.transaction import atomic, set_rollback
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework import viewsets, mixins
@@ -24,27 +25,32 @@ class EmployeeTimeOffView(
     def get_queryset(self):
         return self.queryset.filter(owner=self.kwargs['employee_pk'])
 
+    @atomic
     def create(self, request, *args, **kwargs):
         owner = self.request.user.employee
         employee = get_object_or_404(Employee, pk=self.kwargs.get('employee_pk'))
+        schedule = employee.get_current_schedule()
+
+        if schedule is None:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data="No Emplopyee Schedule")
 
         if owner.id != employee.pk:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        # Check overlapped time off
-        # => Check if there is a time off that has start_date or end_date between incoming start_date and end_date
+        # Check if overlapped with approved time off
 
         start_date = request.data['start_date']
         end_date = request.data['end_date']
         overlapped = self.get_queryset().filter(
-            Q(start_date__gte=start_date) & Q(start_date__lte=end_date) |
-            Q(end_date__gte=start_date) & Q(end_date__lte=end_date)
+            (Q(start_date__gte=start_date) & Q(start_date__lte=end_date) |
+             Q(end_date__gte=start_date) & Q(end_date__lte=end_date)) &
+            Q(status=TimeOff.TimeOffStatus.Approved)
         ).exists()
 
         if overlapped:
             return Response(status=status.HTTP_400_BAD_REQUEST, data="OVERLAPPED_WITH_ANOTHER_TIME_OFF")
 
-        # Check holiday
+        # Check if overlapped with a holiday
         holiday_overlapped = Holiday.objects.filter(
             Q(start_date__gte=start_date) & Q(start_date__lte=end_date) |
             Q(end_date__gte=start_date) & Q(end_date__lte=end_date)
@@ -52,14 +58,22 @@ class EmployeeTimeOffView(
         if holiday_overlapped:
             return Response(status=status.HTTP_400_BAD_REQUEST, data="OVERLAPPED_WITH_A_HOLIDAY")
 
-        # Check Saturday, Sunday (schedule)
+        # TODO: check if time off is overlapped with approved attendance???
 
+        request_data = request.data
         context = {"owner": owner}
         serializer = TimeOffSerializer(data=request.data, context=context)
         if not serializer.is_valid():
             return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
 
         serializer.save()
+        created_time_off = serializer.data
+
+        # Check if request time off that is not in schedule
+        if created_time_off["work_hours"] == 0:
+            set_rollback(True)
+            return Response(status=status.HTTP_400_BAD_REQUEST,
+                            data="time off in a not working day".strip().upper().replace(' ', '_'))
         return Response(data=serializer.data)
 
     @action(detail=True, methods=['post'])

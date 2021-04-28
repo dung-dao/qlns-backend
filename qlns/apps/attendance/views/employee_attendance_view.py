@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import pytz
+from django.db.models import Q
 from django.db.transaction import atomic, set_rollback
 from django.shortcuts import get_object_or_404
 from geopy import distance
@@ -10,7 +11,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from qlns.apps.attendance.models import Attendance, Tracking, OvertimeType
+from qlns.apps.attendance.models import Attendance, Tracking, OvertimeType, Holiday, TimeOff
 from qlns.apps.attendance.serializers.attendance import AttendanceSerializer
 from qlns.apps.attendance.serializers.attendance.edit_actual_serializer import EditActualSerializer
 from qlns.apps.attendance.serializers.attendance.edit_overtime_serializer import EditOvertimeSerializer
@@ -37,6 +38,28 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
             return Response(status=status.HTTP_403_FORBIDDEN, data="NO_SCHEDULE")
 
         today = datetime.utcnow().replace(tzinfo=pytz.utc)
+
+        # Check if overlapped with a holiday
+
+        holiday_overlapped = Holiday.objects.filter(
+            Q(start_date__lte=today) &
+            Q(end_date__gte=today) &
+            Q(schedule=schedule)
+        ).exists()
+
+        if holiday_overlapped:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="OVERLAPPED_WITH_A_HOLIDAY")
+
+        # Check if overlapped with approved time off
+        time_off_overlapped = TimeOff.objects.filter(
+            Q(owner=employee) &
+            Q(start_date__lte=today) &
+            Q(end_date__gte=today) &
+            Q(status=TimeOff.TimeOffStatus.Approved)
+        ).exists()
+
+        if time_off_overlapped:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="OVERLAPPED_WITH_APPROVED_TIME_OFF")
 
         # Get today attendance
         attendance = Attendance.objects.filter(
@@ -178,7 +201,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         if tracking is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        # TODO: CHECK OUT OUTSIDE
+        # CHECK OUT OUTSIDE
         check_out_lat = request.data.get('check_out_lat', None)
         check_out_lng = request.data.get('check_out_lng', None)
         check_out_note = request.data.get('check_out_note', tracking.check_out_note)
