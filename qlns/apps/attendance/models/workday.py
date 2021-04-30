@@ -17,8 +17,8 @@ class WorkDay(models.Model):
     # Fields
     day = models.CharField(max_length=3, choices=DayOfWeek.choices)
 
-    morning_from = models.TimeField(blank=True, null=True)
-    morning_to = models.TimeField(blank=True, null=True)
+    morning_from = models.DateTimeField(blank=True, null=True)
+    morning_to = models.DateTimeField(blank=True, null=True)
 
-    afternoon_from = models.TimeField(blank=True, null=True)
-    afternoon_to = models.TimeField(blank=True, null=True)
+    afternoon_from = models.DateTimeField(blank=True, null=True)
+    afternoon_to = models.DateTimeField(blank=True, null=True)

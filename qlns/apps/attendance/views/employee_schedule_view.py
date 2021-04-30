@@ -24,10 +24,10 @@ class EmployeeScheduleView(viewsets.ViewSet):
 
         serializer = None
         if schedule is None:
-            serializer = self.serializer_class(data=request.data)
+            serializer = self.serializer_class(data=request.data, context={"request": request})
         else:
             serializer = self.serializer_class(
-                instance=schedule, data=request.data)
+                instance=schedule, data=request.data, context={"request": request})
 
         if serializer.is_valid():
             if str(request.data['owner']) != employee_pk:

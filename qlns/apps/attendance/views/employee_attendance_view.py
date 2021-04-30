@@ -1,5 +1,7 @@
-from datetime import date, datetime
+from datetime import datetime
 
+import pytz
+from django.db.models import Q
 from django.db.transaction import atomic, set_rollback
 from django.shortcuts import get_object_or_404
 from geopy import distance
@@ -9,7 +11,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from qlns.apps.attendance.models import Attendance, Tracking, OvertimeType
+from qlns.apps.attendance.models import Attendance, Tracking, OvertimeType, Holiday, TimeOff
 from qlns.apps.attendance.serializers.attendance import AttendanceSerializer
 from qlns.apps.attendance.serializers.attendance.edit_actual_serializer import EditActualSerializer
 from qlns.apps.attendance.serializers.attendance.edit_overtime_serializer import EditOvertimeSerializer
@@ -35,7 +37,29 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         if schedule is None:
             return Response(status=status.HTTP_403_FORBIDDEN, data="NO_SCHEDULE")
 
-        today = date.today()
+        today = datetime.utcnow().replace(tzinfo=pytz.utc)
+
+        # Check if overlapped with a holiday
+
+        holiday_overlapped = Holiday.objects.filter(
+            Q(start_date__lte=today) &
+            Q(end_date__gte=today) &
+            Q(schedule=schedule)
+        ).exists()
+
+        if holiday_overlapped:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="OVERLAPPED_WITH_A_HOLIDAY")
+
+        # Check if overlapped with approved time off
+        time_off_overlapped = TimeOff.objects.filter(
+            Q(owner=employee) &
+            Q(start_date__lte=today) &
+            Q(end_date__gte=today) &
+            Q(status=TimeOff.TimeOffStatus.Approved)
+        ).exists()
+
+        if time_off_overlapped:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="OVERLAPPED_WITH_APPROVED_TIME_OFF")
 
         # Get today attendance
         attendance = Attendance.objects.filter(
@@ -67,7 +91,6 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
 
         # Get OvertimeType
         # overtime_type = get_object_or_404(OvertimeType, name=request.data['overtime_type'])
-        overtime_type = None
         overtime_type_name = request.data.get('overtime_type', None)
 
         if overtime_type_name is None:
@@ -75,7 +98,40 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         else:
             overtime_type = get_object_or_404(OvertimeType, name=overtime_type_name)
 
-        # TODO: Check valid OT (not in schedule)
+        workday = schedule.get_work_day(today.astimezone(pytz.timezone(schedule.time_zone)).weekday())
+
+        locale_check_in_time = today.astimezone(pytz.timezone(schedule.time_zone))
+
+        locale_schedule = {
+            "morning_from": workday.morning_from.astimezone(pytz.timezone(schedule.time_zone)).replace(
+                year=locale_check_in_time.year,
+                month=locale_check_in_time.month,
+                day=locale_check_in_time.day),
+            "morning_to": workday.morning_to.astimezone(pytz.timezone(schedule.time_zone)).replace(
+                year=locale_check_in_time.year,
+                month=locale_check_in_time.month,
+                day=locale_check_in_time.day),
+            "afternoon_from": workday.afternoon_from.astimezone(pytz.timezone(schedule.time_zone)).replace(
+                year=locale_check_in_time.year,
+                month=locale_check_in_time.month,
+                day=locale_check_in_time.day),
+            "afternoon_to": workday.afternoon_to.astimezone(pytz.timezone(schedule.time_zone)).replace(
+                year=locale_check_in_time.year,
+                month=locale_check_in_time.month,
+                day=locale_check_in_time.day),
+        }
+
+        # Schedule check
+        # check_in_time = today.time()
+
+        inside_schedule = (locale_schedule["morning_from"] <= locale_check_in_time <= locale_schedule["morning_to"]) or \
+                          (locale_schedule["afternoon_from"] <= locale_check_in_time <= locale_schedule["afternoon_to"])
+
+        if not inside_schedule and overtime_type is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="OvertimeType required")
+
+        if inside_schedule and overtime_type is not None:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="Invalid Overtime request")
 
         # Get location
         location = employee.get_job_location()
@@ -109,7 +165,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
             attendance=attendance,
             overtime_type=overtime_type,
 
-            check_in_time=datetime.utcnow(),
+            check_in_time=today,
 
             check_in_lat=check_in_lat,
             check_in_lng=check_in_lng,
@@ -128,7 +184,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         employee = get_object_or_404(Employee, pk=employee_pk)
 
         # Get attendance
-        today = date.today()
+        today = datetime.utcnow()
         attendance = Attendance.objects.filter(
             date__year=today.year,
             date__month=today.month,
@@ -145,7 +201,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         if tracking is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        # TODO: CHECK OUT OUTSIDE
+        # CHECK OUT OUTSIDE
         check_out_lat = request.data.get('check_out_lat', None)
         check_out_lng = request.data.get('check_out_lng', None)
         check_out_note = request.data.get('check_out_note', tracking.check_out_note)
@@ -173,7 +229,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
             check_out_outside = None
 
         # Check Out
-        tracking.check_out_time = datetime.utcnow()
+        tracking.check_out_time = datetime.utcnow().replace(tzinfo=pytz.utc)
         tracking.check_out_lat = check_out_lat
         tracking.check_out_lng = check_out_lng
         tracking.check_out_note = check_out_note
