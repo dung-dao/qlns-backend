@@ -8,6 +8,8 @@ router = routers.SimpleRouter()
 router.register(r'insurance_policies', _.InsurancePolicyView, basename='insurance_policy')
 router.register(r'tax_policies', _.TaxPolicyView, basename='tax_policy')
 
+router.register(r'payroll_config', _.PayrollConfigView, basename='payroll_config')
+
 employee_router = routers.NestedSimpleRouter(core_router, r'employees', lookup='employee')
 employee_router.register('salary_info', _.EmployeeSalaryView, basename='salary_info')
 
