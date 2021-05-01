@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'qlns.apps.core',
     'qlns.apps.job',
     'qlns.apps.attendance',
+    'qlns.apps.payroll',
 ]
 
 MIDDLEWARE = [
