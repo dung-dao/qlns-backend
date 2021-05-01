@@ -2,3 +2,5 @@ from .insurance_policy_view import InsurancePolicyView
 from .tax_policy_view import TaxPolicyView
 from .employee_salary_view import EmployeeSalaryView
 from .payroll_config_view import PayrollConfigView
+from .salary_template_view import SalaryTemplateView
+from .salary_system_field_view import SalarySystemFieldView
