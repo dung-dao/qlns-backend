@@ -9,3 +9,7 @@ from .payroll_config import PayrollConfig
 from .salary_template import SalaryTemplate
 from .salary_template_field import SalaryTemplateField
 from .salary_system_field import SalarySystemField
+
+from .Payroll import Payroll
+from .payslip import Payslip
+from .PayslipValue import PayslipValue

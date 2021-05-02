@@ -4,3 +4,5 @@ from .employee_salary_view import EmployeeSalaryView
 from .payroll_config_view import PayrollConfigView
 from .salary_template_view import SalaryTemplateView
 from .salary_system_field_view import SalarySystemFieldView
+from .payroll_view import PayrollView
+from .payroll_payslips_view import PayrollPayslipsView
