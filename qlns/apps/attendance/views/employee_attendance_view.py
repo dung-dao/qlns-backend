@@ -11,7 +11,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from qlns.apps.attendance.models import Attendance, Tracking, Holiday, TimeOff
+from qlns.apps.attendance.models import Attendance, Tracking, TimeOff
 from qlns.apps.attendance.serializers.attendance import AttendanceSerializer
 from qlns.apps.attendance.serializers.attendance.edit_actual_serializer import EditActualSerializer
 from qlns.apps.attendance.serializers.attendance.edit_overtime_serializer import EditOvertimeSerializer
@@ -26,31 +26,25 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
     def get_queryset(self):
         return self.queryset.filter(owner=self.kwargs['employee_pk'])
 
-    # employee
+    @atomic
     @action(detail=False, methods=['post'])
-    @atomic()
     def check_in(self, request, employee_pk=None):
         employee = Employee.objects.get(pk=employee_pk)
         schedule = employee.get_current_schedule()
+        current_timezone = pytz.timezone(schedule.time_zone)
 
-        # NO SCHEDULE EXCEPTION
+        # Check if employee doesn't have schedule
         if schedule is None:
             return Response(status=status.HTTP_403_FORBIDDEN, data="NO_SCHEDULE")
 
         today = datetime.utcnow().replace(tzinfo=pytz.utc)
+        locale_today_start = today.astimezone(current_timezone) \
+            .replace(hour=0, minute=0, second=0, microsecond=0)
 
-        # Check if overlapped with a holiday
+        locale_today_end = today.astimezone(current_timezone) \
+            .replace(hour=23, minute=59, second=59, microsecond=999999)
 
-        holiday_overlapped = Holiday.objects.filter(
-            Q(start_date__lte=today) &
-            Q(end_date__gte=today) &
-            Q(schedule=schedule)
-        ).exists()
-
-        if holiday_overlapped:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data="OVERLAPPED_WITH_A_HOLIDAY")
-
-        # Check if overlapped with approved time off
+        # Check if overlapped with an approved time off
         time_off_overlapped = TimeOff.objects.filter(
             Q(owner=employee) &
             Q(start_date__lte=today) &
@@ -62,16 +56,14 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
             return Response(status=status.HTTP_400_BAD_REQUEST, data="OVERLAPPED_WITH_APPROVED_TIME_OFF")
 
         # Get today attendance
-        attendance = Attendance.objects.filter(
-            date__year=today.year,
-            date__month=today.month,
-            date__day=today.day,
+        attendance = Attendance.objects \
+            .filter(Q(date__gte=locale_today_start) &
+                    Q(date__lte=locale_today_end) &
+                    Q(owner=employee_pk) &
+                    Q(schedule=schedule)) \
+            .first()
 
-            owner=employee_pk,
-            schedule=schedule
-        ).first()
-
-        # ALREADY_CHECK_IN_EXCEPTION
+        # Check if already check in
         if attendance is not None:
             log = attendance.tracking_data.filter(check_out_time=None).first()
             if log is not None:
@@ -86,37 +78,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
                 status=Attendance.AttendanceLogStatus.Pending
             )
 
-        # SAVE ATTENDANCE
         attendance.save()
-
-        workday = schedule.get_work_day(today.astimezone(pytz.timezone(schedule.time_zone)).weekday())
-
-        locale_check_in_time = today.astimezone(pytz.timezone(schedule.time_zone))
-
-        locale_schedule = {
-            "morning_from": workday.morning_from.astimezone(pytz.timezone(schedule.time_zone)).replace(
-                year=locale_check_in_time.year,
-                month=locale_check_in_time.month,
-                day=locale_check_in_time.day),
-            "morning_to": workday.morning_to.astimezone(pytz.timezone(schedule.time_zone)).replace(
-                year=locale_check_in_time.year,
-                month=locale_check_in_time.month,
-                day=locale_check_in_time.day),
-            "afternoon_from": workday.afternoon_from.astimezone(pytz.timezone(schedule.time_zone)).replace(
-                year=locale_check_in_time.year,
-                month=locale_check_in_time.month,
-                day=locale_check_in_time.day),
-            "afternoon_to": workday.afternoon_to.astimezone(pytz.timezone(schedule.time_zone)).replace(
-                year=locale_check_in_time.year,
-                month=locale_check_in_time.month,
-                day=locale_check_in_time.day),
-        }
-
-        # Schedule check
-        # check_in_time = today.time()
-
-        in_schedule = (locale_schedule["morning_from"] <= locale_check_in_time <= locale_schedule["morning_to"]) or \
-                      (locale_schedule["afternoon_from"] <= locale_check_in_time <= locale_schedule["afternoon_to"])
 
         # Get location
         location = employee.get_job_location()
@@ -145,10 +107,9 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         else:
             check_in_outside = None
 
-        # Create Tracking info
+        # Create Tracking
         tracking = Tracking(
             attendance=attendance,
-            is_overtime=not in_schedule,
 
             check_in_time=today,
 
@@ -167,18 +128,26 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
     @action(detail=False, methods=['post'])
     def check_out(self, request, employee_pk):
         employee = get_object_or_404(Employee, pk=employee_pk)
+        schedule = employee.get_current_schedule()
+        current_timezone = pytz.timezone(schedule.time_zone)
 
-        # Get attendance
-        today = datetime.utcnow()
-        attendance = Attendance.objects.filter(
-            date__year=today.year,
-            date__month=today.month,
-            date__day=today.day,
+        # Get today attendance
+        today = datetime.utcnow().replace(tzinfo=pytz.utc)
 
-            owner=employee_pk
-        ).first()
+        locale_today_start = today.astimezone(current_timezone) \
+            .replace(hour=0, minute=0, second=0, microsecond=0)
 
-        # TODO: refactor this later
+        locale_today_end = today.astimezone(current_timezone) \
+            .replace(hour=23, minute=59, second=59, microsecond=999999)
+
+        attendance = Attendance.objects \
+            .filter(Q(date__gte=locale_today_start) &
+                    Q(date__lte=locale_today_end) &
+                    Q(owner=employee_pk) &
+                    Q(schedule=schedule)) \
+            .prefetch_related('tracking_data') \
+            .first()
+
         if attendance is None:
             return Response(status=status.HTTP_400_BAD_REQUEST, data="NOT_CHECK_IN_YET")
 
@@ -220,6 +189,8 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         tracking.check_out_note = check_out_note
         tracking.check_out_outside = check_out_outside
 
+        tracking.is_overtime = tracking.check_overtime()
+
         tracking.save()
 
         # Calculate work hours
@@ -260,7 +231,6 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
 
     @action(detail=True, methods=['post'])
     def approve(self, request, employee_pk, pk):
-        # Đặt status thành approved, tạm chấp nhận kết quả nhưng chưa sử dụng để tính lương
         employee = Employee.objects.get(pk=employee_pk)
         attendance = employee.attendance.filter(pk=pk).first()
         if attendance is None:
@@ -278,9 +248,6 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
 
     @action(detail=True, methods=['post'])
     def confirm(self, request, employee_pk, pk):
-        # Chỉnh sửa lại actual hour nếu có khiếu nại, confirm để đặt status là confirm.
-        # Dữ liệu này sẽ được sử dụng để tinh lương.
-
         employee = Employee.objects.get(pk=employee_pk)
         attendance = employee.attendance.filter(pk=pk).first()
         if attendance is None:

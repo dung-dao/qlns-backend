@@ -1,4 +1,3 @@
-import pytz
 from django.db import models
 
 
@@ -29,49 +28,16 @@ class Tracking(models.Model):
         return duration if self.is_overtime else 0
 
     def get_actual_work_hours(self):
-        # Scheduled time
+        if self.check_out_time is None:
+            return 0
+
         schedule = self.attendance.schedule
+        return schedule.get_work_hours(self.check_in_time, self.check_out_time)
 
-        # Locale time
-        locale_check_in_time = self.check_in_time.astimezone(pytz.timezone(schedule.time_zone))
-        locale_check_out_time = self.check_out_time.astimezone(pytz.timezone(schedule.time_zone))
+    def check_overtime(self):
+        if self.check_out_time is None:
+            return False
 
-        weekday = locale_check_in_time.weekday()
-        workday = schedule.get_work_day(weekday)
-
-        locale_schedule = {
-            "morning_from": workday.morning_from.astimezone(pytz.timezone(schedule.time_zone)).replace(
-                year=locale_check_in_time.year,
-                month=locale_check_in_time.month,
-                day=locale_check_in_time.day),
-            "morning_to": workday.morning_to.astimezone(pytz.timezone(schedule.time_zone)).replace(
-                year=locale_check_in_time.year,
-                month=locale_check_in_time.month,
-                day=locale_check_in_time.day),
-            "afternoon_from": workday.afternoon_from.astimezone(pytz.timezone(schedule.time_zone)).replace(
-                year=locale_check_in_time.year,
-                month=locale_check_in_time.month,
-                day=locale_check_in_time.day),
-            "afternoon_to": workday.afternoon_to.astimezone(pytz.timezone(schedule.time_zone)).replace(
-                year=locale_check_in_time.year,
-                month=locale_check_in_time.month,
-                day=locale_check_in_time.day),
-        }
-
-        if self.check_in_time is None or \
-                self.check_out_time is None or \
-                not self.is_overtime:
-            return 0
-
-        if locale_schedule["morning_from"] <= locale_check_in_time <= locale_schedule["morning_to"]:
-            check_in_time = max(locale_schedule["morning_from"], locale_check_in_time)
-            check_out_time = min(locale_schedule["morning_to"], locale_check_out_time)
-
-        elif locale_schedule["afternoon_from"] <= locale_check_in_time <= locale_schedule["afternoon_to"]:
-            check_in_time = max(locale_schedule["afternoon_from"], locale_check_in_time)
-            check_out_time = min(locale_schedule["afternoon_to"], locale_check_out_time)
-        else:
-            return 0
-
-        duration = (check_out_time - check_in_time).seconds / 3600
-        return duration
+        schedule = self.attendance.schedule
+        work_hours = schedule.get_work_hours(self.check_in_time, self.check_out_time)
+        return work_hours == 0
