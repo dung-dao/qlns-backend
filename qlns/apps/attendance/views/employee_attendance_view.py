@@ -11,7 +11,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from qlns.apps.attendance.models import Attendance, Tracking, OvertimeType, Holiday, TimeOff
+from qlns.apps.attendance.models import Attendance, Tracking, Holiday, TimeOff
 from qlns.apps.attendance.serializers.attendance import AttendanceSerializer
 from qlns.apps.attendance.serializers.attendance.edit_actual_serializer import EditActualSerializer
 from qlns.apps.attendance.serializers.attendance.edit_overtime_serializer import EditOvertimeSerializer
@@ -89,15 +89,6 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         # SAVE ATTENDANCE
         attendance.save()
 
-        # Get OvertimeType
-        # overtime_type = get_object_or_404(OvertimeType, name=request.data['overtime_type'])
-        overtime_type_name = request.data.get('overtime_type', None)
-
-        if overtime_type_name is None:
-            overtime_type = None
-        else:
-            overtime_type = get_object_or_404(OvertimeType, name=overtime_type_name)
-
         workday = schedule.get_work_day(today.astimezone(pytz.timezone(schedule.time_zone)).weekday())
 
         locale_check_in_time = today.astimezone(pytz.timezone(schedule.time_zone))
@@ -124,14 +115,8 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         # Schedule check
         # check_in_time = today.time()
 
-        inside_schedule = (locale_schedule["morning_from"] <= locale_check_in_time <= locale_schedule["morning_to"]) or \
-                          (locale_schedule["afternoon_from"] <= locale_check_in_time <= locale_schedule["afternoon_to"])
-
-        if not inside_schedule and overtime_type is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data="OvertimeType required")
-
-        if inside_schedule and overtime_type is not None:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data="Invalid Overtime request")
+        in_schedule = (locale_schedule["morning_from"] <= locale_check_in_time <= locale_schedule["morning_to"]) or \
+                      (locale_schedule["afternoon_from"] <= locale_check_in_time <= locale_schedule["afternoon_to"])
 
         # Get location
         location = employee.get_job_location()
@@ -163,7 +148,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         # Create Tracking info
         tracking = Tracking(
             attendance=attendance,
-            overtime_type=overtime_type,
+            is_overtime=not in_schedule,
 
             check_in_time=today,
 

@@ -11,7 +11,6 @@ from qlns.apps.core.urls import router as core_router
 
 router = routers.SimpleRouter()
 router.register('schedules', attendance_views.ScheduleView, basename='schedule')
-router.register('overtime_types', attendance_views.OvertimeTypeView, basename='overtime_type')
 router.register('holidays', HolidayView, basename='holiday')
 router.register('time_off_types', TimeOffTypeView, basename='time_off_type')
 

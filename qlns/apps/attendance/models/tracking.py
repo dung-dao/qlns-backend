@@ -4,7 +4,7 @@ from django.db import models
 
 class Tracking(models.Model):
     attendance = models.ForeignKey(to='Attendance', on_delete=models.CASCADE, related_name='tracking_data')
-    overtime_type = models.ForeignKey(to='OvertimeType', null=True, on_delete=models.SET_NULL)
+    is_overtime = models.BooleanField(default=False)
 
     check_in_time = models.DateTimeField()
     check_in_lat = models.FloatField(null=True)
@@ -26,7 +26,7 @@ class Tracking(models.Model):
             return 0
 
         duration = (self.check_out_time - self.check_in_time).seconds / 3600
-        return duration if self.overtime_type is not None else 0
+        return duration if self.is_overtime else 0
 
     def get_actual_work_hours(self):
         # Scheduled time
@@ -60,7 +60,7 @@ class Tracking(models.Model):
 
         if self.check_in_time is None or \
                 self.check_out_time is None or \
-                self.overtime_type is not None:
+                not self.is_overtime:
             return 0
 
         if locale_schedule["morning_from"] <= locale_check_in_time <= locale_schedule["morning_to"]:

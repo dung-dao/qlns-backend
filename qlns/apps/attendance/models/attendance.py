@@ -29,8 +29,9 @@ class Attendance(models.Model):
     status = models.CharField(max_length=15, choices=AttendanceLogStatus.choices, default='Pending')
 
     def calculate_work_hours(self):
-        self.actual_work_hours = sum(map(lambda e: e.get_actual_work_hours(), self.tracking_data.all()))
+        trackers = self.tracking_data.all()
+        self.actual_work_hours = sum(map(lambda e: e.get_actual_work_hours(), trackers))
 
-        self.ot_work_hours = sum(map(lambda e: e.get_ot_hours(), self.tracking_data.all()))
+        self.ot_work_hours = sum(map(lambda e: e.get_ot_hours(), trackers))
 
         self.save()
