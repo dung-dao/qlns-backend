@@ -25,7 +25,13 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        return self.queryset.filter(owner=self.kwargs['employee_pk'])
+        from_date = self.request.query_params.get("from_date", datetime.min)
+        to_date = self.request.query_params.get("to_date", datetime.max)
+
+        return self.queryset \
+            .filter(Q(owner=self.kwargs['employee_pk']) &
+                    Q(date__gte=from_date) &
+                    Q(date__lte=to_date))
 
     @atomic
     @action(detail=False, methods=['post'])

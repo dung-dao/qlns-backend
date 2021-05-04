@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -21,8 +21,8 @@ class ManageAttendanceView(APIView):
 
         query_params = self.request.query_params
         query = {
-            "start_date": query_params.get('start_date', '1970-1-1'),
-            "end_date": query_params.get('end_date', date.today())
+            "start_date": query_params.get('start_date', datetime.min),
+            "end_date": query_params.get('end_date', datetime.max)
         }
 
         serializer = EmployeeWithAttendanceSerializer(employee_attendance, many=True, context=query)
