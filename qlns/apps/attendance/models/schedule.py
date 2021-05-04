@@ -1,109 +1,96 @@
-from datetime import datetime, timedelta
-from functools import reduce
+from datetime import timedelta, datetime
 
-import pytz
 from django.db import models
+from django.utils import timezone
 
 
 class Schedule(models.Model):
-    TimeZone = models.TextChoices('TimeZone', reduce(lambda a, b: f'{a} {b}', pytz.all_timezones))
     name = models.CharField(max_length=100, unique=True)
-    time_zone = models.CharField(max_length=100, default='Asia/Ho_Chi_Minh', choices=TimeZone.choices)
 
     def get_work_day(self, weekday):
         week_days = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
         return self.workdays.filter(day=week_days[weekday]).first()
 
-    def get_locale_workday(self, convert_date, weekday):
-        locale_convert_date = convert_date.astimezone(pytz.timezone(self.time_zone))
+    def shift_workday(self, to_date, weekday):
         workday = self.get_work_day(weekday)
 
         if workday is None:
             return None
 
-        locale_workday = {
-            "weekday": workday.day,
-            "morning_from": workday.morning_from.astimezone(pytz.timezone(self.time_zone)).replace(
-                year=locale_convert_date.year,
-                month=locale_convert_date.month,
-                day=locale_convert_date.day) if workday.morning_from is not None else None,
-            "morning_to": workday.morning_to.astimezone(pytz.timezone(self.time_zone)).replace(
-                year=locale_convert_date.year,
-                month=locale_convert_date.month,
-                day=locale_convert_date.day) if workday.morning_to is not None else None,
-            "afternoon_from": workday.afternoon_from.astimezone(pytz.timezone(self.time_zone)).replace(
-                year=locale_convert_date.year,
-                month=locale_convert_date.month,
-                day=locale_convert_date.day) if workday.afternoon_from is not None else None,
-            "afternoon_to": workday.afternoon_to.astimezone(pytz.timezone(self.time_zone)).replace(
-                year=locale_convert_date.year,
-                month=locale_convert_date.month,
-                day=locale_convert_date.day) if workday.afternoon_to is not None else None,
+        date_params = {
+            "year": to_date.year,
+            "month": to_date.month,
+            "day": to_date.day
         }
-        return locale_workday
+
+        weekday = workday.day
+        morning_from = timezone.localtime(workday.morning_from) \
+            .replace(**date_params) if workday.morning_from is not None else None
+
+        morning_to = timezone.localtime(workday.morning_to) \
+            .replace(**date_params) if workday.morning_to is not None else None
+
+        afternoon_from = timezone.localtime(workday.afternoon_from) \
+            .replace(**date_params) if workday.afternoon_from is not None else None
+
+        afternoon_to = timezone.localtime(workday.afternoon_to) \
+            .replace(**date_params) if workday.afternoon_to is not None else None
+
+        res = {
+            "weekday": weekday,
+            "morning_from": morning_from,
+            "morning_to": morning_to,
+            "afternoon_from": afternoon_from,
+            "afternoon_to": afternoon_to,
+        }
+        return res
 
     def get_schedule_work_hours(self):
-        work_hours = 0
-        workdays = self.workdays.all()
-        today = datetime.utcnow().replace(tzinfo=pytz.utc).astimezone(pytz.timezone(self.time_zone))
+        today = timezone.now()
+        one_week = timedelta(weeks=1)
+        next_week = today + one_week
 
-        for wd in workdays:
-            if wd.morning_from is not None:
-                morning_from = wd.morning_from.replace(
-                    year=today.year,
-                    month=today.month,
-                    day=today.day)
-                morning_to = wd.morning_to.replace(
-                    year=today.year,
-                    month=today.month,
-                    day=today.day)
-                work_hours = work_hours + (morning_to - morning_from).seconds / 3600
-            if wd.afternoon_from is not None:
-                afternoon_from = wd.afternoon_from.replace(
-                    year=today.year,
-                    month=today.month,
-                    day=today.day)
-                afternoon_to = wd.afternoon_to.replace(
-                    year=today.year,
-                    month=today.month,
-                    day=today.day)
-                work_hours += (afternoon_to - afternoon_from).seconds / 3600
-
-        return work_hours
+        schedule_work_hours = self.get_work_hours(today, next_week)
+        return schedule_work_hours
 
     def get_work_hours(self, start_time, end_time):
-        locale_start_time = start_time.astimezone(pytz.timezone(self.time_zone))
-        locale_end_time = end_time.astimezone(pytz.timezone(self.time_zone))
+        start_time = timezone.localtime(start_time)
+        end_time = timezone.localtime(end_time)
 
         duration = 0.0
 
-        i_date = locale_start_time
-        while i_date < locale_end_time:
+        i_date = start_time
+        while i_date < end_time:
             weekday = i_date.weekday()
-            workday = self.get_locale_workday(i_date, weekday)
+            workday_dict = self.shift_workday(i_date, weekday)
 
-            if workday is None:
-                i_date = i_date + timedelta(days=1)
-                continue
+            if workday_dict is None:
+                # shift i_date to shift_start of a future date
+                pass
 
             # morning duration
-            morning_start = max(workday["morning_from"], i_date) \
-                if workday["morning_from"] is not None else i_date
-            morning_end = min(workday["morning_to"], locale_end_time) \
-                if workday["morning_to"] is not None else i_date
+            morning_start = max(workday_dict.get("morning_from", i_date), i_date)
+            morning_end = min(workday_dict.get("morning_to", i_date), end_time)
             morning_hours = (morning_end - morning_start).seconds / 3600 \
                 if morning_end >= morning_start else 0
 
             # afternoon duration
-            afternoon_start = max(workday["afternoon_from"], i_date) \
-                if workday["afternoon_from"] is not None else i_date
-            afternoon_end = min(workday["afternoon_to"], locale_end_time) \
-                if workday["afternoon_to"] is not None else i_date
-
+            afternoon_start = max(workday_dict.get("afternoon_from", i_date), i_date)
+            afternoon_end = min(workday_dict.get("afternoon_to", i_date), end_time)
             afternoon_hours = (afternoon_end - afternoon_start).seconds / 3600 \
                 if afternoon_end >= afternoon_start else 0
 
             duration += morning_hours + afternoon_hours
-            i_date += timedelta(days=1)
 
-        return duration
+            # Shift i_date to work date
+            next_day = i_date + timedelta(days=1)
+            while self.shift_workday(next_day, next_day.weekday()) is None:
+                next_day += timedelta(days=1)
+
+            next_work_day_dict = self.shift_workday(next_day, next_day.weekday())
+            i_date = min(
+                next_work_day_dict.get("morning_from", datetime.max),
+                next_work_day_dict.get("afternoon_from", datetime.max),
+            )
+
+        return round(duration, 1)

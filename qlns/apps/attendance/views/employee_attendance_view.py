@@ -4,6 +4,7 @@ import pytz
 from django.db.models import Q
 from django.db.transaction import atomic, set_rollback
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from geopy import distance
 from rest_framework import status
 from rest_framework import viewsets, mixins
@@ -31,18 +32,15 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
     def check_in(self, request, employee_pk=None):
         employee = Employee.objects.get(pk=employee_pk)
         schedule = employee.get_current_schedule()
-        current_timezone = pytz.timezone(schedule.time_zone)
 
         # Check if employee doesn't have schedule
         if schedule is None:
             return Response(status=status.HTTP_403_FORBIDDEN, data="NO_SCHEDULE")
 
-        today = datetime.utcnow().replace(tzinfo=pytz.utc)
-        locale_today_start = today.astimezone(current_timezone) \
-            .replace(hour=0, minute=0, second=0, microsecond=0)
+        today = timezone.now()
+        locale_today_start = today.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        locale_today_end = today.astimezone(current_timezone) \
-            .replace(hour=23, minute=59, second=59, microsecond=999999)
+        locale_today_end = today.replace(hour=23, minute=59, second=59, microsecond=999999)
 
         # Check if overlapped with an approved time off
         time_off_overlapped = TimeOff.objects.filter(
@@ -129,16 +127,13 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
     def check_out(self, request, employee_pk):
         employee = get_object_or_404(Employee, pk=employee_pk)
         schedule = employee.get_current_schedule()
-        current_timezone = pytz.timezone(schedule.time_zone)
 
         # Get today attendance
-        today = datetime.utcnow().replace(tzinfo=pytz.utc)
+        today = timezone.now()
 
-        locale_today_start = today.astimezone(current_timezone) \
-            .replace(hour=0, minute=0, second=0, microsecond=0)
+        locale_today_start = today.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        locale_today_end = today.astimezone(current_timezone) \
-            .replace(hour=23, minute=59, second=59, microsecond=999999)
+        locale_today_end = today.replace(hour=23, minute=59, second=59, microsecond=999999)
 
         attendance = Attendance.objects \
             .filter(Q(date__gte=locale_today_start) &
