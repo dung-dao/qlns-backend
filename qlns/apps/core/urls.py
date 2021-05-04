@@ -6,6 +6,8 @@ from qlns.apps.core.views import qualifications
 
 router = routers.SimpleRouter()
 
+router.register(r'app_config', core_views.ApplicationConfigView, basename='app_config')
+
 router.register(r'countries', core_views.CountryView, basename='country')
 router.register(r'departments', core_views.DepartmentView, basename='department')
 
