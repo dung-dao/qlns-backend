@@ -25,8 +25,8 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        from_date = self.request.query_params.get("from_date", datetime.min)
-        to_date = self.request.query_params.get("to_date", datetime.max)
+        from_date = self.request.query_params.get("from_date", datetime.min).replace(tzinfo=pytz.utc)
+        to_date = self.request.query_params.get("to_date", datetime.max).replace(tzinfo=pytz.utc)
 
         return self.queryset \
             .filter(Q(owner=self.kwargs['employee_pk']) &

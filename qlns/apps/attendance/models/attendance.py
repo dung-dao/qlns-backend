@@ -1,5 +1,7 @@
 from django.db import models
 
+from qlns.apps.attendance import models as attendance_models
+
 
 class Attendance(models.Model):
     class AttendanceLogStatus(models.TextChoices):
@@ -29,7 +31,7 @@ class Attendance(models.Model):
     status = models.CharField(max_length=15, choices=AttendanceLogStatus.choices, default='Pending')
 
     def calculate_work_hours(self):
-        trackers = self.tracking_data.all()
+        trackers = attendance_models.Tracking.objects.filter(attendance=self.pk)
         self.actual_work_hours = sum(map(lambda e: e.get_actual_work_hours(), trackers))
 
         self.ot_work_hours = sum(map(lambda e: e.get_ot_hours(), trackers))

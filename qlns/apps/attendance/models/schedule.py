@@ -93,4 +93,4 @@ class Schedule(models.Model):
                 next_work_day_dict.get("afternoon_from", datetime.max),
             )
 
-        return round(duration, 1)
+        return duration
