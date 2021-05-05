@@ -20,6 +20,9 @@ class Tracking(models.Model):
 
     location = models.ForeignKey(to='job.Location', on_delete=models.SET_NULL, null=True)
 
+    actual_work_hours = models.FloatField(default=0)
+    ot_work_hours = models.FloatField(default=0)
+
     def get_ot_hours(self):
         if self.check_in_time is None or self.check_out_time is None:
             return 0
