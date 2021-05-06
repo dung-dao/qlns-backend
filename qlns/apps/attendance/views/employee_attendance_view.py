@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import pytz
+from dateutil.parser import isoparse
 from django.db.models import Q
 from django.db.transaction import atomic, set_rollback
 from django.shortcuts import get_object_or_404
@@ -25,13 +26,30 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        from_date = self.request.query_params.get("from_date", datetime.min).replace(tzinfo=pytz.utc)
-        to_date = self.request.query_params.get("to_date", datetime.max).replace(tzinfo=pytz.utc)
+        return self.queryset.filter(Q(owner=self.kwargs['employee_pk']))
 
-        return self.queryset \
-            .filter(Q(owner=self.kwargs['employee_pk']) &
-                    Q(date__gte=from_date) &
-                    Q(date__lte=to_date))
+    def list(self, request, *args, **kwargs):
+        try:
+            query_params = self.request.query_params
+            from_date_str = query_params.get('start_date', None)
+            to_date_str = query_params.get('end_date', None)
+
+            start_date = isoparse(from_date_str) if from_date_str is not None \
+                else datetime.min.replace(tzinfo=pytz.utc)
+            end_date = isoparse(to_date_str) if to_date_str is not None \
+                else datetime.max.replace(tzinfo=pytz.utc)
+
+            if timezone.is_naive(start_date) or timezone.is_naive(end_date):
+                return Response(status=status.HTTP_400_BAD_REQUEST, data="Bad query params")
+
+            # Return data
+            data = self.get_queryset().filter(
+                Q(date__gte=start_date) &
+                Q(date__lte=end_date)
+            )
+            return Response(data=self.serializer_class(data, many=True).data)
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="Bad query params")
 
     @atomic
     @action(detail=False, methods=['post'])
