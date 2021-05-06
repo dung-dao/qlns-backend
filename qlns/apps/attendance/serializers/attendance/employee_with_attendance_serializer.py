@@ -27,6 +27,7 @@ class FilteredAttendanceSerializer(serializers.ModelSerializer):
                   'ot_work_hours',
                   'ot_hours_modified',
                   'ot_hours_modification_note',
+                  'is_confirmed',
 
                   'reviewed_by', 'confirmed_by', 'status',)
         list_serializer_class = FilteredAttendanceListSerializer

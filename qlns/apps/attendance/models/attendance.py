@@ -8,11 +8,11 @@ class Attendance(models.Model):
         Pending = 'Pending'
         Approved = 'Approved'
         Rejected = 'Rejected'
-        Confirmed = 'Confirmed'
 
     owner = models.ForeignKey(to='core.Employee', on_delete=models.CASCADE, related_name='attendance')
     reviewed_by = models.ForeignKey(to='core.Employee', on_delete=models.PROTECT,
                                     null=True, related_name='reviewed_attendance')
+    is_confirmed = models.BooleanField(default=False)
     confirmed_by = models.ForeignKey(to='core.Employee', on_delete=models.PROTECT,
                                      null=True, related_name='confirmed_attendance')
 

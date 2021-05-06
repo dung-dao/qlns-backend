@@ -36,7 +36,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
     @atomic
     @action(detail=False, methods=['post'])
     def check_in(self, request, employee_pk=None):
-        employee = Employee.objects.get(pk=employee_pk)
+        employee = get_object_or_404(Employee, pk=employee_pk)
         schedule = employee.get_current_schedule()
 
         # Check if employee doesn't have schedule
@@ -201,23 +201,24 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
 
     @action(detail=True, methods=['post'])
     def revert(self, request, employee_pk, pk):
-        employee = Employee.objects.get(pk=employee_pk)
+        employee = get_object_or_404(Employee, pk=employee_pk)
         attendance = employee.attendance.filter(pk=pk).first()
         if attendance is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         if attendance.status == Attendance.AttendanceLogStatus.Pending or \
-                attendance.status == Attendance.AttendanceLogStatus.Confirmed:
+                attendance.is_confirmed:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         attendance.status = Attendance.AttendanceLogStatus.Pending
-        attendance.reviewed_by = request.user
+        attendance.reviewed_by = request.user.employee
+        attendance.save()
 
         return Response()
 
     @action(detail=True, methods=['post'])
     def reject(self, request, employee_pk, pk):
-        employee = Employee.objects.get(pk=employee_pk)
+        employee = get_object_or_404(Employee, pk=employee_pk)
         attendance = employee.attendance.filter(pk=pk).first()
         if attendance is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -226,13 +227,15 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         attendance.status = Attendance.AttendanceLogStatus.Rejected
-        attendance.reviewed_by = request.user
+        attendance.reviewed_by = request.user.employee
+        attendance.save()
 
         return Response()
 
     @action(detail=True, methods=['post'])
     def approve(self, request, employee_pk, pk):
-        employee = Employee.objects.get(pk=employee_pk)
+        employee = get_object_or_404(Employee, pk=employee_pk)
+
         attendance = employee.attendance.filter(pk=pk).first()
         if attendance is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -249,31 +252,42 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
 
     @action(detail=True, methods=['post'])
     def confirm(self, request, employee_pk, pk):
-        employee = Employee.objects.get(pk=employee_pk)
+        employee = get_object_or_404(Employee, pk=employee_pk)
+        author = request.user.employee
+
         attendance = employee.attendance.filter(pk=pk).first()
         if attendance is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if attendance.status == Attendance.AttendanceLogStatus.Pending:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data="Approve or reject first")
+        if attendance.is_confirmed:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        elif attendance.status == Attendance.AttendanceLogStatus.Pending:
+            attendance.status = Attendance.AttendanceLogStatus.Approved
+            attendance.reviewed_by = author
 
-        attendance.status = Attendance.AttendanceLogStatus.Confirmed
-        attendance.confirmed_by = request.user.employee
+            attendance.is_confirmed = True
+            attendance.confirmed_by = author
+
+        elif attendance.status == Attendance.AttendanceLogStatus.Approved or \
+                attendance.status == Attendance.AttendanceLogStatus.Rejected:
+            attendance.is_confirmed = True
+            attendance.confirmed_by = author
+        else:
+            raise Exception("Unreachable code")
 
         attendance.save()
-
         return Response()
 
     @action(detail=True, methods=['post'])
     def edit_actual_hours(self, request, employee_pk, pk):
-        employee = Employee.objects.get(pk=employee_pk)
+        employee = get_object_or_404(Employee, pk=employee_pk)
         attendance = employee.attendance.filter(pk=pk).first()
 
         # Validate
         if attendance is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if attendance.status == Attendance.AttendanceLogStatus.Confirmed:
+        if attendance.is_confirmed:
             return Response(status=status.HTTP_403_FORBIDDEN, data="Cannot edit confirmed attendance")
 
         serializer = EditActualSerializer(data=request.data)
@@ -290,14 +304,14 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
 
     @action(detail=True, methods=['post'])
     def edit_overtime_hours(self, request, employee_pk, pk):
-        employee = Employee.objects.get(pk=employee_pk)
+        employee = get_object_or_404(Employee, pk=employee_pk)
         attendance = employee.attendance.filter(pk=pk).first()
 
         # Validate
         if attendance is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if attendance.status == Attendance.AttendanceLogStatus.Confirmed:
+        if attendance.is_confirmed:
             return Response(status=status.HTTP_403_FORBIDDEN, data="Cannot edit confirmed attendance")
 
         serializer = EditOvertimeSerializer(data=request.data)
