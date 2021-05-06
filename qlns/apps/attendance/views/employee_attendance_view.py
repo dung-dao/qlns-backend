@@ -1,7 +1,6 @@
 from datetime import datetime
 
 import pytz
-from dateutil.parser import isoparse
 from django.db.models import Q
 from django.db.transaction import atomic, set_rollback
 from django.shortcuts import get_object_or_404
@@ -18,6 +17,7 @@ from qlns.apps.attendance.serializers.attendance import AttendanceSerializer
 from qlns.apps.attendance.serializers.attendance.edit_actual_serializer import EditActualSerializer
 from qlns.apps.attendance.serializers.attendance.edit_overtime_serializer import EditOvertimeSerializer
 from qlns.apps.core.models import Employee
+from qlns.utils.datetime_utils import parse_iso_datetime
 
 
 class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
@@ -29,27 +29,17 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         return self.queryset.filter(Q(owner=self.kwargs['employee_pk']))
 
     def list(self, request, *args, **kwargs):
-        try:
-            query_params = self.request.query_params
-            from_date_str = query_params.get('start_date', None)
-            to_date_str = query_params.get('end_date', None)
+        start_date = self.request.query_params.get('from_date', None)
+        end_date = self.request.query_params.get('to_date', None)
 
-            start_date = isoparse(from_date_str) if from_date_str is not None \
-                else datetime.min.replace(tzinfo=pytz.utc)
-            end_date = isoparse(to_date_str) if to_date_str is not None \
-                else datetime.max.replace(tzinfo=pytz.utc)
+        start_date = parse_iso_datetime(start_date, datetime.min.replace(tzinfo=pytz.utc))
+        end_date = parse_iso_datetime(end_date, datetime.max.replace(tzinfo=pytz.utc))
 
-            if timezone.is_naive(start_date) or timezone.is_naive(end_date):
-                return Response(status=status.HTTP_400_BAD_REQUEST, data="Bad query params")
+        attendance_data = self.get_queryset() \
+            .filter(Q(date__gte=start_date) &
+                    Q(date__lte=end_date))
 
-            # Return data
-            data = self.get_queryset().filter(
-                Q(date__gte=start_date) &
-                Q(date__lte=end_date)
-            )
-            return Response(data=self.serializer_class(data, many=True).data)
-        except ValueError:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data="Bad query params")
+        return Response(data=AttendanceSerializer(attendance_data, many=True).data)
 
     @atomic
     @action(detail=False, methods=['post'])

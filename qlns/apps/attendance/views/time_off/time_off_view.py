@@ -1,11 +1,13 @@
-from datetime import MAXYEAR
+from datetime import datetime
 
+import pytz
 from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from qlns.apps.attendance.models import TimeOff
 from qlns.apps.core.models import Employee
+from qlns.utils.datetime_utils import parse_iso_datetime
 
 
 class TimeOffEmployeeSerializer(serializers.ModelSerializer):
@@ -28,8 +30,10 @@ class TimeOffListItemSerializer(serializers.ModelSerializer):
 class TimeOffView(APIView):
     def get(self, request):
         params = self.request.query_params
-        start_date = params.get('start_date', '1970-1-1')
-        end_date = params.get('end_date', f'{MAXYEAR}-12-31')
+        start_date = parse_iso_datetime(params.get('from_date', None),
+                                        datetime.min.replace(tzinfo=pytz.utc))
+        end_date = parse_iso_datetime(params.get('to_date', None),
+                                      datetime.max.replace(tzinfo=pytz.utc))
 
         instances = TimeOff.objects.filter(
             start_date__gte=start_date,
