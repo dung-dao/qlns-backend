@@ -36,14 +36,20 @@ class Schedule(models.Model):
         afternoon_to = timezone.localtime(workday.afternoon_to) \
             .replace(**date_params) if workday.afternoon_to is not None else None
 
-        res = {
-            "weekday": weekday,
-            "morning_from": morning_from,
-            "morning_to": morning_to,
-            "afternoon_from": afternoon_from,
-            "afternoon_to": afternoon_to,
-        }
-        return res
+        workday_dict = {"weekday": weekday, }
+        if morning_from is not None:
+            workday_dict['morning_from'] = morning_from
+
+        if morning_to is not None:
+            workday_dict['morning_to'] = morning_to
+
+        if afternoon_from is not None:
+            workday_dict['afternoon_from'] = afternoon_from
+
+        if afternoon_to is not None:
+            workday_dict['afternoon_to'] = afternoon_to
+
+        return workday_dict
 
     def get_schedule_work_hours(self):
         today = timezone.now()
@@ -63,10 +69,6 @@ class Schedule(models.Model):
         while i_date < end_time:
             weekday = i_date.weekday()
             workday_dict = self.shift_workday(i_date, weekday)
-
-            if workday_dict is None:
-                # shift i_date to shift_start of a future date
-                pass
 
             # morning duration
             morning_start = max(workday_dict.get("morning_from", i_date), i_date)

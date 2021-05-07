@@ -198,8 +198,9 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         tracking.check_out_note = check_out_note
         tracking.check_out_outside = check_out_outside
 
-        tracking.is_overtime = tracking.check_overtime()
+        tracking.save()
 
+        tracking.is_overtime = tracking.check_overtime()
         tracking.save()
 
         # Calculate work hours
