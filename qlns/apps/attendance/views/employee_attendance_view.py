@@ -216,12 +216,14 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         if attendance is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if attendance.status == Attendance.AttendanceLogStatus.Pending or \
-                attendance.is_confirmed:
+        if attendance.status == Attendance.AttendanceLogStatus.Pending:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        if attendance.status == Attendance.AttendanceLogStatus.Confirmed:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         attendance.status = Attendance.AttendanceLogStatus.Pending
-        attendance.reviewed_by = request.user.employee
+        attendance.reviewed_by = None
         attendance.save()
 
         return Response()
@@ -269,18 +271,19 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         if attendance is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if attendance.is_confirmed:
+        if attendance.status == Attendance.AttendanceLogStatus.Confirmed or \
+                attendance.status == Attendance.AttendanceLogStatus.Rejected:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         elif attendance.status == Attendance.AttendanceLogStatus.Pending:
             attendance.status = Attendance.AttendanceLogStatus.Approved
             attendance.reviewed_by = author
 
-            attendance.is_confirmed = True
+            attendance.status = Attendance.AttendanceLogStatus.Confirmed
             attendance.confirmed_by = author
 
         elif attendance.status == Attendance.AttendanceLogStatus.Approved or \
                 attendance.status == Attendance.AttendanceLogStatus.Rejected:
-            attendance.is_confirmed = True
+            attendance.status = Attendance.AttendanceLogStatus.Confirmed
             attendance.confirmed_by = author
         else:
             raise Exception("Unreachable code")
@@ -297,8 +300,8 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         if attendance is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if attendance.is_confirmed:
-            return Response(status=status.HTTP_403_FORBIDDEN, data="Cannot edit confirmed attendance")
+        if attendance.status != Attendance.AttendanceLogStatus.Pending:
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         serializer = EditActualSerializer(data=request.data)
         if not serializer.is_valid():
@@ -321,8 +324,8 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         if attendance is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if attendance.is_confirmed:
-            return Response(status=status.HTTP_403_FORBIDDEN, data="Cannot edit confirmed attendance")
+        if attendance.status != Attendance.AttendanceLogStatus.Pending:
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         serializer = EditOvertimeSerializer(data=request.data)
         if not serializer.is_valid():

@@ -15,7 +15,6 @@ class AttendanceSerializer(serializers.ModelSerializer):
                   'ot_work_hours',
                   'ot_hours_modified',
                   'ot_hours_modification_note',
-                  'is_confirmed',
                   'reviewed_by', 'confirmed_by', 'status', 'tracking_data',)
 
     tracking_data = TrackingSerializer(read_only=True, many=True)
