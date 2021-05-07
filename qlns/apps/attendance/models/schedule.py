@@ -3,6 +3,8 @@ from datetime import timedelta, datetime
 from django.db import models
 from django.utils import timezone
 
+from qlns.utils.constants import MAX_UTC_DATETIME
+
 
 class Schedule(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -90,9 +92,10 @@ class Schedule(models.Model):
                 next_day += timedelta(days=1)
 
             next_work_day_dict = self.shift_workday(next_day, next_day.weekday())
+
             i_date = min(
-                next_work_day_dict.get("morning_from", datetime.max),
-                next_work_day_dict.get("afternoon_from", datetime.max),
+                next_work_day_dict.get("morning_from", MAX_UTC_DATETIME),
+                next_work_day_dict.get("afternoon_from", MAX_UTC_DATETIME),
             )
 
         return duration

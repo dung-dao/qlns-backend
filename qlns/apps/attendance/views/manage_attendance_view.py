@@ -1,11 +1,9 @@
-from datetime import datetime
-
-import pytz
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from qlns.apps.attendance.serializers.attendance import EmployeeWithAttendanceSerializer
 from qlns.apps.core.models import Employee
+from qlns.utils.constants import MIN_UTC_DATETIME, MAX_UTC_DATETIME
 from qlns.utils.datetime_utils import parse_iso_datetime
 
 
@@ -23,10 +21,8 @@ class ManageAttendanceView(APIView):
 
         query_params = self.request.query_params
 
-        start_date = parse_iso_datetime(query_params.get("from_date", None),
-                                        datetime.min.replace(tzinfo=pytz.utc))
-        end_date = parse_iso_datetime(query_params.get("to_date", None),
-                                      datetime.max.replace(tzinfo=pytz.utc))
+        start_date = parse_iso_datetime(query_params.get("from_date", None), MIN_UTC_DATETIME)
+        end_date = parse_iso_datetime(query_params.get("to_date", None), MAX_UTC_DATETIME)
 
         query = {
             "start_date": start_date,

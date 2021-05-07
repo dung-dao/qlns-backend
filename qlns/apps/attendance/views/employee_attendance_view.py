@@ -17,6 +17,7 @@ from qlns.apps.attendance.serializers.attendance import AttendanceSerializer
 from qlns.apps.attendance.serializers.attendance.edit_actual_serializer import EditActualSerializer
 from qlns.apps.attendance.serializers.attendance.edit_overtime_serializer import EditOvertimeSerializer
 from qlns.apps.core.models import Employee
+from qlns.utils.constants import MIN_UTC_DATETIME, MAX_UTC_DATETIME
 from qlns.utils.datetime_utils import parse_iso_datetime
 
 
@@ -32,8 +33,8 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         start_date = self.request.query_params.get('from_date', None)
         end_date = self.request.query_params.get('to_date', None)
 
-        start_date = parse_iso_datetime(start_date, datetime.min.replace(tzinfo=pytz.utc))
-        end_date = parse_iso_datetime(end_date, datetime.max.replace(tzinfo=pytz.utc))
+        start_date = parse_iso_datetime(start_date, MIN_UTC_DATETIME)
+        end_date = parse_iso_datetime(end_date, MAX_UTC_DATETIME)
 
         attendance_data = self.get_queryset() \
             .filter(Q(date__gte=start_date) &
