@@ -23,7 +23,8 @@ class ManageAttendanceView(viewsets.ViewSet):
         query = {
             "start_date": start_date,
             "end_date": end_date,
-            "period_id": self.request.query_params.get('period_id', None)
+            "period_id": self.request.query_params.get('period_id', None),
+            "request": request
         }
 
         serializer = EmployeeWithAttendanceSerializer(employee_attendance, many=True, context=query)
