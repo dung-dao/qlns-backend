@@ -3,6 +3,7 @@ from .workday import WorkDay
 from .employee_schedule import EmployeeSchedule
 
 from .attendance import Attendance
+from .period import Period
 from .tracking import Tracking
 
 # Time Off

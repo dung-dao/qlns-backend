@@ -12,7 +12,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from qlns.apps.attendance.models import Attendance, Tracking, TimeOff
+from qlns.apps.attendance.models import Attendance, Tracking, TimeOff, Period
 from qlns.apps.attendance.serializers.attendance import AttendanceSerializer
 from qlns.apps.attendance.serializers.attendance.edit_actual_serializer import EditActualSerializer
 from qlns.apps.attendance.serializers.attendance.edit_overtime_serializer import EditOvertimeSerializer
@@ -32,6 +32,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
     def list(self, request, *args, **kwargs):
         start_date = self.request.query_params.get('from_date', None)
         end_date = self.request.query_params.get('to_date', None)
+        period_id = self.request.query_params.get('period_id', None)
 
         start_date = parse_iso_datetime(start_date, MIN_UTC_DATETIME)
         end_date = parse_iso_datetime(end_date, MAX_UTC_DATETIME)
@@ -39,6 +40,8 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         attendance_data = self.get_queryset() \
             .filter(Q(date__gte=start_date) &
                     Q(date__lte=end_date))
+        if period_id is not None:
+            attendance_data = attendance_data.filter(period=period_id)
 
         return Response(data=AttendanceSerializer(attendance_data, many=True).data)
 
@@ -53,6 +56,8 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
             return Response(status=status.HTTP_403_FORBIDDEN, data="NO_SCHEDULE")
 
         today = timezone.now()
+        period = Period.get_or_create(today)
+
         locale_today_start = today.replace(hour=0, minute=0, second=0, microsecond=0)
 
         locale_today_end = today.replace(hour=23, minute=59, second=59, microsecond=999999)
@@ -88,6 +93,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
                 owner=employee,
                 schedule=schedule,
                 date=today,
+                period=period,
                 status=Attendance.AttendanceLogStatus.Pending
             )
 

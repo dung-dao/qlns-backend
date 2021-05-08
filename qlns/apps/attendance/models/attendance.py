@@ -17,6 +17,7 @@ class Attendance(models.Model):
                                      null=True, related_name='confirmed_attendance')
 
     schedule = models.ForeignKey(to='Schedule', on_delete=models.PROTECT)
+    period = models.ForeignKey(to='Period', on_delete=models.PROTECT, related_name='attendance')
     date = models.DateTimeField()
 
     # Actual Working Hours

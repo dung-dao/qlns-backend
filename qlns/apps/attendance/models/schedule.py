@@ -1,4 +1,4 @@
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 from django.db import models
 from django.utils import timezone
@@ -71,6 +71,21 @@ class Schedule(models.Model):
         while i_date < end_time:
             weekday = i_date.weekday()
             workday_dict = self.shift_workday(i_date, weekday)
+            if workday_dict is None:
+                # Shift i_date to work date
+                next_day = i_date + timedelta(days=1)
+                while self.shift_workday(next_day, next_day.weekday()) is None:
+                    next_day += timedelta(days=1)
+
+                next_work_day_dict = self.shift_workday(next_day, next_day.weekday())
+
+                i_date = min(
+                    next_work_day_dict.get("morning_from", MAX_UTC_DATETIME),
+                    next_work_day_dict.get("afternoon_from", MAX_UTC_DATETIME),
+                )
+
+                if i_date >= end_time:
+                    break
 
             # morning duration
             morning_start = max(workday_dict.get("morning_from", i_date), i_date)
