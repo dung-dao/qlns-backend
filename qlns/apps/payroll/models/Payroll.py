@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 import formulas
 from django.db import models
 from django.db.models import Q
@@ -275,7 +277,15 @@ class Payroll(models.Model):
                 )
 
                 if field.type == SalaryTemplateField.SalaryFieldType.SystemField:
-                    payslip_value.readonly_value = calculation_dict[field.code_name]
+                    value = calculation_dict[field.code_name]
+                    t = type(value)
+                    if type(value) == str:
+                        payslip_value.str_value = value
+                    elif type(value) == int or type(value) == float or type(value) == Decimal:
+                        payslip_value.num_value = value
+                    else:
+                        raise Exception('Unreachable code')
+
                 elif field.type == SalaryTemplateField.SalaryFieldType.Formula:
                     formula = formulas.Parser().ast(f'={field.define}')[1].compile()
                     formula_context = {}
@@ -286,7 +296,7 @@ class Payroll(models.Model):
                     try:
                         ans = float(formula(**formula_context))
                         calculation_dict[field.code_name] = ans
-                        payslip_value.value = ans
+                        payslip_value.num_value = ans
                     except ValueError:
                         raise ValueError('Cannot convert to float')
                 payslip_value.save()

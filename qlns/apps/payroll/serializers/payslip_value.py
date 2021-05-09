@@ -8,5 +8,5 @@ class PayslipValueSerializer(serializers.ModelSerializer):
     field = SalaryTemplateFieldSerializer(read_only=True)
 
     class Meta:
-        fields = '__all__'
         model = PayslipValue
+        exclude = ('id', 'payslip')
