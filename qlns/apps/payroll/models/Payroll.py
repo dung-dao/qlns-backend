@@ -2,23 +2,26 @@ import formulas
 from django.db import models
 from django.db.models import Q
 from django.db.transaction import atomic
+from django.utils import timezone
 
-from qlns.apps.core.models import Employee
+from qlns.apps.attendance.models import Attendance, TimeOff, Holiday
+from qlns.apps.core.models import Employee, ApplicationConfig
 from qlns.apps.payroll.models import SalaryTemplateField
 from qlns.apps.payroll.models.PayslipValue import PayslipValue
 from qlns.apps.payroll.models.payslip import Payslip
+from qlns.utils.constants import MIN_UTC_DATETIME
 
 
 class Payroll(models.Model):
     name = models.CharField(max_length=255)
     template = models.ForeignKey(to='SalaryTemplate', on_delete=models.PROTECT)
-    cycle_start_date = models.DateTimeField()
-    cycle_end_date = models.DateTimeField()
+    period = models.ForeignKey(to='attendance.Period', on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
 
     @staticmethod
     def get_employee_info(employee):
         return {
+            "id": employee.id,
             "first_name": employee.first_name,
             "last_name": employee.last_name,
             "full_name": f'{employee.first_name} {employee.last_name}'.strip(),
@@ -26,7 +29,7 @@ class Payroll(models.Model):
             "gender": employee.gender,
             "birthday": employee.date_of_birth,
             "phone": employee.phone,
-            "nationality": getattr(employee.nationality, 'name', None),
+            "nationality": employee.nationality.name if employee.nationality is not None else None,
             "personal_tax_id": employee.personal_tax_id,
             "social_insurance": employee.social_insurance,
             "health_insurance": employee.health_insurance,
@@ -34,23 +37,44 @@ class Payroll(models.Model):
 
     @staticmethod
     def get_bank_info(employee):
-        return {
-            "bank_name": getattr(employee.bank_info, 'bank_name', None),
-            "bank_branch": getattr(employee.bank_info, 'branch', None),
-            "bank_account_holder": getattr(employee.bank_info, 'account_name', None),
-            "bank_account_number": getattr(employee.bank_info, 'account_number', None),
+        res_dict = {
+            'bank_name': None,
+            'bank_branch': None,
+            'bank_account_holder': None,
+            'bank_account_number': None
         }
+
+        if employee.bank_info is not None:
+            res_dict['bank_name'] = employee.bank_info.bank_name
+            res_dict['bank_branch'] = employee.bank_info.branch
+            res_dict['bank_account_holder'] = employee.bank_info.account_name
+            res_dict['bank_account_number'] = employee.bank_info.account_number
+
+        return res_dict
 
     @staticmethod
     def get_job_info(employee):
         job = employee.get_current_job()
+        if job is None:
+            return {
+                "job_title": None,
+                "department": None,
+
+                "location": None,
+                "employment_status": None,
+
+                "probation_start_date": None,
+                "probation_end_date": None,
+                "contract_start_date": None,
+                "contract_end_date": None,
+            }
 
         return {
-            "job_title": getattr(job.job_title, 'name', None),
-            "department": getattr(job.department, 'name', None),
+            "job_title": job.job_title.name if job is not None else None,
+            "department": job.department.name if job.department is not None else None,
 
-            "location": getattr(job.location, 'name', None),
-            "employment_status": getattr(job.employment_status, 'name', None),
+            "location": job.location.name if job.location is not None else None,
+            "employment_status": job.employment_status.name if job.employment_status is not None else None,
 
             "probation_start_date": job.probation_start_date,
             "probation_end_date": job.probation_end_date,
@@ -62,38 +86,122 @@ class Payroll(models.Model):
     def get_salary_info(employee):
         if employee.salary_info is None:
             return {
-                "salary": None,
-                "tax_plan": None,
-                "insurance_plan": None,
-                "number_of_dependants": None,
+                "salary": 0,
+                "basic_salary": 0,
+                "tax_plan_code": None,
+                "tax_plan_name": None,
+                "insurance_plan_code": None,
+                "insurance_plan_name": None,
+                "number_of_dependants": 0,
             }
 
+        salary = employee.salary_info.salary
+        basic_salary = employee.salary_info.basic_salary
+        tax_plan_code = employee.salary_info.tax_policy.code
+        tax_plan_name = employee.salary_info.tax_policy.name
+
+        insurance_plan_name = employee.salary_info.insurance_policy.name
+        insurance_plan_code = employee.salary_info.insurance_policy.code
+
+        number_of_dependants = employee.Dependents.count()
         return {
-            "salary": employee.salary_info.salary,
-            "tax_plan": getattr(employee.salary_info.tax_policy, 'name', None),
-            "insurance_plan": getattr(employee.salary_info.insurance_policy, 'name', None),
-            "number_of_dependants": employee.Dependents.count(),
+            "salary": salary,
+            "basic_salary": basic_salary,
+
+            "tax_plan_code": tax_plan_code,
+            "tax_plan_name": tax_plan_name,
+
+            "insurance_plan_code": insurance_plan_code,
+            "insurance_plan_name": insurance_plan_name,
+            "number_of_dependants": number_of_dependants,
         }
 
     @staticmethod
-    def get_work_info(employee, start_date, end_date):
-        # attendance = employee.attendance.filter(
-        #     Q(date__gte=start_date) &
-        #     Q(date__lte=end_date)
-        # )
-
+    def get_work_info(employee, cycle_start_date, cycle_end_date):
         schedule = employee.get_current_schedule()
-        schedule_work_hours = schedule.get_schedule_work_hours() \
-            if schedule is not None else 0
+        _schedule_work_point = schedule.get_work_hours(cycle_start_date, cycle_end_date) / 8.0
+
+        # ACTUAL WORK POINT
+        attendance_data = employee.attendance.filter(
+            Q(date__gte=cycle_start_date) &
+            Q(date__lte=cycle_end_date) &
+            Q(status=Attendance.AttendanceLogStatus.Confirmed)
+        )
+
+        def map_attendance_to_work_point(attendance):
+            return attendance.actual_work_hours / 8.0
+
+        _normal_work_point = sum(map(map_attendance_to_work_point, attendance_data))
+
+        # OT WORK POINT
+        app_config = ApplicationConfig.objects.first()
+        ot_point_rate = app_config.ot_point_rate
+
+        def map_attendance_to_ot_work_point(attendance):
+            return attendance.ot_work_hours / 8.0 * ot_point_rate
+
+        _overtime_work_point = sum(map(map_attendance_to_ot_work_point, attendance_data))
+
+        # PAID TIME OFF
+        pto_data = employee.TimeOff.filter(
+            Q(start_date__gte=cycle_start_date) &
+            Q(start_date__lte=cycle_end_date) &
+            Q(status=TimeOff.TimeOffStatus.Approved) &
+            Q(time_off_type__is_paid=True)
+        )
+
+        def map_pto_to_work_point(pto):
+            return pto.trim_work_hours(cycle_start_date, cycle_end_date) / 8.0
+
+        _paid_time_off_point = sum(map(map_pto_to_work_point, pto_data))
+
+        # HOLIDAY POINT
+        holiday_data = Holiday.objects.filter(
+            Q(start_date__gte=cycle_start_date) &
+            Q(start_date__lte=cycle_end_date) &
+            Q(schedule=schedule)
+        )
+
+        def map_holiday_to_holiday_point(holiday):
+            return holiday.trim_work_hours(cycle_start_date, cycle_end_date) / 24
+
+        _holiday_point = sum(map(map_holiday_to_holiday_point, holiday_data))
+
+        # TODO: COUNT LATE
+        def count_late_attendance(attendance):
+            attendance_date = timezone.localtime(attendance.date)
+
+            trackers = attendance.tracking_data.all()
+            workday = schedule.shift_workday(attendance_date, attendance_date.weekday())
+
+            def check_late_tracker(tracker):
+                if workday is None:
+                    return False
+
+                morning_from = workday.get('morning_from', MIN_UTC_DATETIME)
+                morning_to = workday.get('morning_to', MIN_UTC_DATETIME)
+
+                afternoon_from = workday.get('afternoon_from', MIN_UTC_DATETIME)
+                afternoon_to = workday.get('afternoon_to', MIN_UTC_DATETIME)
+
+                if morning_from < tracker.check_in_time < morning_to or \
+                        afternoon_from < tracker.check_in_time < afternoon_to:
+                    return True
+                else:
+                    return False
+
+            return len(list(filter(check_late_tracker, trackers)))
+
+        count_late_attendance = sum(map(count_late_attendance, attendance_data))
 
         return {
-            "schedule_work_point": schedule_work_hours / 8.0,
-            "schedule_work_hours": schedule_work_hours,
-            "actual_work_point": None,
-            "actual_work_hours": None,
-            "sum_late": None,
-            "deficit": None,
-            "days_off": None,
+            "schedule_work_point": _schedule_work_point,
+            "actual_work_point": _normal_work_point + _overtime_work_point + _paid_time_off_point + _holiday_point,
+            "normal_work_point": _normal_work_point,
+            "overtime_work_point": _overtime_work_point,
+            "paid_time_off_point": _paid_time_off_point,
+            "holiday_point": _holiday_point,
+            "sum_late": count_late_attendance
         }
 
     @atomic
@@ -127,14 +235,37 @@ class Payroll(models.Model):
             employee_info = Payroll.get_employee_info(employee)
             job_info = Payroll.get_job_info(employee)
             salary_info = Payroll.get_salary_info(employee)
-            work_info = Payroll.get_work_info(employee, None, None)
+            work_info = Payroll.get_work_info(employee,
+                                              self.period.start_date,
+                                              self.period.end_date)
 
             calculation_dict = {
+                "payroll_start_date": self.period.start_date,
+                "payroll_end_date": self.period.end_date,
                 **employee_info,
                 **job_info,
                 **salary_info,
                 **work_info,
             }
+
+            def PIT_VN(thu_nhap_tinh_thue):
+                if thu_nhap_tinh_thue <= 5000000:
+                    return 5 / 100 * thu_nhap_tinh_thue
+                elif thu_nhap_tinh_thue <= 10000000:
+                    return 10 / 100 * thu_nhap_tinh_thue - 250000
+                elif thu_nhap_tinh_thue <= 18000000:
+                    return 15 / 100 * thu_nhap_tinh_thue - 750000
+                elif thu_nhap_tinh_thue <= 32000000:
+                    return 20 / 100 * thu_nhap_tinh_thue - 1650000
+                elif thu_nhap_tinh_thue <= 52000000:
+                    return 25 / 100 * thu_nhap_tinh_thue - 3250000
+                elif thu_nhap_tinh_thue <= 80000000:
+                    return 30 / 100 * thu_nhap_tinh_thue - 5850000
+                else:
+                    return 35 / 100 * thu_nhap_tinh_thue - 9850000
+
+            functions = formulas.get_functions()
+            functions['PIT_VN'] = PIT_VN
 
             # Create field value
             for field in template_fields:
@@ -154,6 +285,7 @@ class Payroll(models.Model):
                             formula_context[key.upper()] = calculation_dict[key]
                     try:
                         ans = float(formula(**formula_context))
+                        calculation_dict[field.code_name] = ans
                         payslip_value.value = ans
                     except ValueError:
                         raise ValueError('Cannot convert to float')

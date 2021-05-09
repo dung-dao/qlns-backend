@@ -51,8 +51,14 @@ class Migration(migrations.Migration):
                 (query, ["Số người phụ thuộc", "number_of_dependants", None]),
 
                 # Working data
-                (query, ["Công chuẩn", "schedule_work_point", None]),
-                (query, ["Công thực tế", "actual_work_point", None]),
+                (query, ["Công chuẩn", "schedule_work_point", "Số ngày công chuẩn"]),
+                (query, ["Công thực tế", "actual_work_point",
+                         "Số ngày công thực tế (bao gồm cả công nhận được do nghỉ phép, nghỉ lễ, làm ngoài giờ)"]),
+                (query, ["Công hành chính", "normal_work_point", "Số công làm hành chính"]),
+                (query, ["Công ngoài giờ", "overtime_work_point", "Số công làm ngoài giờ"]),
+                (query, ["Công nghỉ phép", "paid_time_off_point", "Số công được nhận khi nghỉ phép có tính lương"]),
+                (query, ["Công nghỉ lễ", "holiday_point", "Số công được nhận do nghỉ lễ"]),
+
             ],
             reverse_sql=[
                 "DELETE FROM qlns.payroll_salarysystemfield"

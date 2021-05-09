@@ -6,3 +6,4 @@ class EmployeeSalary(models.Model):
     insurance_policy = models.ForeignKey(to='InsurancePolicy', on_delete=models.PROTECT)
     tax_policy = models.ForeignKey(to='TaxPolicy', on_delete=models.PROTECT)
     salary = models.DecimalField(max_digits=18, decimal_places=2)
+    basic_salary = models.DecimalField(max_digits=18, decimal_places=2)
