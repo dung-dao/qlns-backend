@@ -210,7 +210,7 @@ class Payroll(models.Model):
     def calculate_salary(self):
         # Prepare data
 
-        # Get template
+        # Get templates
         template = self.template
         template_fields = template.fields.order_by('index')
 

@@ -6,7 +6,7 @@ from qlns.apps.payroll.models import SalaryTemplateField, SalarySystemField
 class SalaryTemplateFieldSerializer(serializers.ModelSerializer):
     class Meta:
         # fields = '__all__'
-        exclude = ('template', 'id',)
+        exclude = ('templates', 'id',)
         model = SalaryTemplateField
 
     def validate(self, attrs):

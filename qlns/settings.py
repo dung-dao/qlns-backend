@@ -67,7 +67,7 @@ ROOT_URLCONF = 'qlns.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, r'qlns/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
