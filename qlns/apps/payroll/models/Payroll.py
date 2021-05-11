@@ -215,15 +215,15 @@ class Payroll(models.Model):
         template_fields = template.fields.order_by('index')
 
         # Prepare calculation data
-        calculation_dict = {}
 
         employees = Employee.objects \
             .prefetch_related('bank_info') \
             .prefetch_related('job_history') \
             .prefetch_related('salary_info') \
-            .filter(
-            Q(job_history__isnull=False) &
-            Q(salary_info__isnull=False))
+            .filter(Q(job_history__isnull=False) &
+                    Q(salary_info__isnull=False) &
+                    Q(employee_schedule__isnull=False))\
+            .distinct()
 
         self.payslips.all().delete()
         self.save()
