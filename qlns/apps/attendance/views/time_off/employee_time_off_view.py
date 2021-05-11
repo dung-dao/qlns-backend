@@ -58,7 +58,7 @@ class EmployeeTimeOffView(
         if holiday_overlapped:
             return Response(status=status.HTTP_400_BAD_REQUEST, data="OVERLAPPED_WITH_A_HOLIDAY")
 
-        # TODO: check if time off is overlapped with approved attendance???
+        # TODO: check if time off is overlapped with approved attendance
 
         request_data = request.data
         context = {"owner": owner}

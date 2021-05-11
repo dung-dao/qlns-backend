@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'qlns.apps.core',
     'qlns.apps.job',
     'qlns.apps.attendance',
+    'qlns.apps.payroll',
 ]
 
 MIDDLEWARE = [
@@ -66,7 +67,7 @@ ROOT_URLCONF = 'qlns.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, r'qlns/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -131,7 +132,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Ho_Chi_Minh'
 
 USE_I18N = True
 
@@ -155,3 +156,9 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
 }
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'uitstudentshrm@gmail.com'
+EMAIL_HOST_PASSWORD = 'tpcnlwrhmrxbhkpz'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True

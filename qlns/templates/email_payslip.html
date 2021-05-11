@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{{title}}</title>
+</head>
+<body>
+<table style="border: 1px solid black; margin-left: auto; margin-right: auto;">
+    <tr style="color: white; background-color: green; padding: 1rem; font-size: 1.2em;">
+        <th colspan="2">{{title}}</th>
+    </tr>
+    {% for value in values %}
+    <tr>
+        <td style="font-size: 1rem; color: black; padding-left: 1rem; padding-right: 1rem;">{{value.name}}</td>
+        <td style="font-size: 1rem; color: black; padding-left: 1rem; padding-right: 1rem;">{{value.value}}</td>
+    </tr>
+    {% endfor %}
+</table>
+</body>
+</html>

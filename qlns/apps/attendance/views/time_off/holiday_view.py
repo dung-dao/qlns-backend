@@ -5,6 +5,8 @@ from rest_framework.response import Response
 
 from qlns.apps.attendance.models import Holiday
 from qlns.apps.attendance.serializers import HolidaySerializer
+from qlns.utils.constants import MIN_UTC_DATETIME, MAX_UTC_DATETIME
+from qlns.utils.datetime_utils import parse_iso_datetime
 
 
 class HolidayView(
@@ -19,10 +21,13 @@ class HolidayView(
 
     def get_queryset(self):
         query_params = self.request.query_params
+        start_date = parse_iso_datetime(query_params.get('from_date', None), MIN_UTC_DATETIME)
+
+        end_date = parse_iso_datetime(query_params.get('to_date', None), MAX_UTC_DATETIME)
 
         return self.queryset.filter(
-            start_date__gte=query_params.get('from_date', '1970-1-1'),
-            start_date__lte=query_params.get('to_date', '2999-1-1'),
+            start_date__gte=start_date,
+            start_date__lte=end_date,
         )
 
     def create(self, request, *args, **kwargs):

@@ -4,6 +4,7 @@ import pytz
 from django.db.models import Q
 from django.db.transaction import atomic, set_rollback
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from geopy import distance
 from rest_framework import status
 from rest_framework import viewsets, mixins
@@ -11,11 +12,13 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from qlns.apps.attendance.models import Attendance, Tracking, OvertimeType, Holiday, TimeOff
+from qlns.apps.attendance.models import Attendance, Tracking, TimeOff, Period
 from qlns.apps.attendance.serializers.attendance import AttendanceSerializer
 from qlns.apps.attendance.serializers.attendance.edit_actual_serializer import EditActualSerializer
 from qlns.apps.attendance.serializers.attendance.edit_overtime_serializer import EditOvertimeSerializer
 from qlns.apps.core.models import Employee
+from qlns.utils.constants import MIN_UTC_DATETIME, MAX_UTC_DATETIME
+from qlns.utils.datetime_utils import parse_iso_datetime
 
 
 class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
@@ -24,33 +27,42 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        return self.queryset.filter(owner=self.kwargs['employee_pk'])
+        return self.queryset.filter(Q(owner=self.kwargs['employee_pk']))
 
-    # employee
+    def list(self, request, *args, **kwargs):
+        start_date = self.request.query_params.get('from_date', None)
+        end_date = self.request.query_params.get('to_date', None)
+        period_id = self.request.query_params.get('period_id', None)
+
+        start_date = parse_iso_datetime(start_date, MIN_UTC_DATETIME)
+        end_date = parse_iso_datetime(end_date, MAX_UTC_DATETIME)
+
+        attendance_data = self.get_queryset() \
+            .filter(Q(date__gte=start_date) &
+                    Q(date__lte=end_date))
+        if period_id is not None:
+            attendance_data = attendance_data.filter(period=period_id)
+
+        return Response(data=AttendanceSerializer(attendance_data, many=True).data)
+
+    @atomic
     @action(detail=False, methods=['post'])
-    @atomic()
     def check_in(self, request, employee_pk=None):
-        employee = Employee.objects.get(pk=employee_pk)
+        employee = get_object_or_404(Employee, pk=employee_pk)
         schedule = employee.get_current_schedule()
 
-        # NO SCHEDULE EXCEPTION
+        # Check if employee doesn't have schedule
         if schedule is None:
             return Response(status=status.HTTP_403_FORBIDDEN, data="NO_SCHEDULE")
 
-        today = datetime.utcnow().replace(tzinfo=pytz.utc)
+        today = timezone.now()
+        period = Period.get_or_create(today)
 
-        # Check if overlapped with a holiday
+        locale_today_start = today.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        holiday_overlapped = Holiday.objects.filter(
-            Q(start_date__lte=today) &
-            Q(end_date__gte=today) &
-            Q(schedule=schedule)
-        ).exists()
+        locale_today_end = today.replace(hour=23, minute=59, second=59, microsecond=999999)
 
-        if holiday_overlapped:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data="OVERLAPPED_WITH_A_HOLIDAY")
-
-        # Check if overlapped with approved time off
+        # Check if overlapped with an approved time off
         time_off_overlapped = TimeOff.objects.filter(
             Q(owner=employee) &
             Q(start_date__lte=today) &
@@ -62,16 +74,14 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
             return Response(status=status.HTTP_400_BAD_REQUEST, data="OVERLAPPED_WITH_APPROVED_TIME_OFF")
 
         # Get today attendance
-        attendance = Attendance.objects.filter(
-            date__year=today.year,
-            date__month=today.month,
-            date__day=today.day,
+        attendance = Attendance.objects \
+            .filter(Q(date__gte=locale_today_start) &
+                    Q(date__lte=locale_today_end) &
+                    Q(owner=employee_pk) &
+                    Q(schedule=schedule)) \
+            .first()
 
-            owner=employee_pk,
-            schedule=schedule
-        ).first()
-
-        # ALREADY_CHECK_IN_EXCEPTION
+        # Check if already check in
         if attendance is not None:
             log = attendance.tracking_data.filter(check_out_time=None).first()
             if log is not None:
@@ -83,55 +93,11 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
                 owner=employee,
                 schedule=schedule,
                 date=today,
+                period=period,
                 status=Attendance.AttendanceLogStatus.Pending
             )
 
-        # SAVE ATTENDANCE
         attendance.save()
-
-        # Get OvertimeType
-        # overtime_type = get_object_or_404(OvertimeType, name=request.data['overtime_type'])
-        overtime_type_name = request.data.get('overtime_type', None)
-
-        if overtime_type_name is None:
-            overtime_type = None
-        else:
-            overtime_type = get_object_or_404(OvertimeType, name=overtime_type_name)
-
-        workday = schedule.get_work_day(today.astimezone(pytz.timezone(schedule.time_zone)).weekday())
-
-        locale_check_in_time = today.astimezone(pytz.timezone(schedule.time_zone))
-
-        locale_schedule = {
-            "morning_from": workday.morning_from.astimezone(pytz.timezone(schedule.time_zone)).replace(
-                year=locale_check_in_time.year,
-                month=locale_check_in_time.month,
-                day=locale_check_in_time.day),
-            "morning_to": workday.morning_to.astimezone(pytz.timezone(schedule.time_zone)).replace(
-                year=locale_check_in_time.year,
-                month=locale_check_in_time.month,
-                day=locale_check_in_time.day),
-            "afternoon_from": workday.afternoon_from.astimezone(pytz.timezone(schedule.time_zone)).replace(
-                year=locale_check_in_time.year,
-                month=locale_check_in_time.month,
-                day=locale_check_in_time.day),
-            "afternoon_to": workday.afternoon_to.astimezone(pytz.timezone(schedule.time_zone)).replace(
-                year=locale_check_in_time.year,
-                month=locale_check_in_time.month,
-                day=locale_check_in_time.day),
-        }
-
-        # Schedule check
-        # check_in_time = today.time()
-
-        inside_schedule = (locale_schedule["morning_from"] <= locale_check_in_time <= locale_schedule["morning_to"]) or \
-                          (locale_schedule["afternoon_from"] <= locale_check_in_time <= locale_schedule["afternoon_to"])
-
-        if not inside_schedule and overtime_type is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data="OvertimeType required")
-
-        if inside_schedule and overtime_type is not None:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data="Invalid Overtime request")
 
         # Get location
         location = employee.get_job_location()
@@ -160,10 +126,9 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         else:
             check_in_outside = None
 
-        # Create Tracking info
+        # Create Tracking
         tracking = Tracking(
             attendance=attendance,
-            overtime_type=overtime_type,
 
             check_in_time=today,
 
@@ -182,18 +147,23 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
     @action(detail=False, methods=['post'])
     def check_out(self, request, employee_pk):
         employee = get_object_or_404(Employee, pk=employee_pk)
+        schedule = employee.get_current_schedule()
 
-        # Get attendance
-        today = datetime.utcnow()
-        attendance = Attendance.objects.filter(
-            date__year=today.year,
-            date__month=today.month,
-            date__day=today.day,
+        # Get today attendance
+        today = timezone.now()
 
-            owner=employee_pk
-        ).first()
+        locale_today_start = today.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        # TODO: refactor this later
+        locale_today_end = today.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+        attendance = Attendance.objects \
+            .filter(Q(date__gte=locale_today_start) &
+                    Q(date__lte=locale_today_end) &
+                    Q(owner=employee_pk) &
+                    Q(schedule=schedule)) \
+            .prefetch_related('tracking_data') \
+            .first()
+
         if attendance is None:
             return Response(status=status.HTTP_400_BAD_REQUEST, data="NOT_CHECK_IN_YET")
 
@@ -237,6 +207,9 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
 
         tracking.save()
 
+        tracking.is_overtime = tracking.check_overtime()
+        tracking.save()
+
         # Calculate work hours
         attendance.calculate_work_hours()
         attendance.save()
@@ -244,23 +217,26 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
 
     @action(detail=True, methods=['post'])
     def revert(self, request, employee_pk, pk):
-        employee = Employee.objects.get(pk=employee_pk)
+        employee = get_object_or_404(Employee, pk=employee_pk)
         attendance = employee.attendance.filter(pk=pk).first()
         if attendance is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if attendance.status == Attendance.AttendanceLogStatus.Pending or \
-                attendance.status == Attendance.AttendanceLogStatus.Confirmed:
+        if attendance.status == Attendance.AttendanceLogStatus.Pending:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        if attendance.status == Attendance.AttendanceLogStatus.Confirmed:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         attendance.status = Attendance.AttendanceLogStatus.Pending
-        attendance.reviewed_by = request.user
+        attendance.reviewed_by = None
+        attendance.save()
 
         return Response()
 
     @action(detail=True, methods=['post'])
     def reject(self, request, employee_pk, pk):
-        employee = Employee.objects.get(pk=employee_pk)
+        employee = get_object_or_404(Employee, pk=employee_pk)
         attendance = employee.attendance.filter(pk=pk).first()
         if attendance is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -269,14 +245,15 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         attendance.status = Attendance.AttendanceLogStatus.Rejected
-        attendance.reviewed_by = request.user
+        attendance.reviewed_by = request.user.employee
+        attendance.save()
 
         return Response()
 
     @action(detail=True, methods=['post'])
     def approve(self, request, employee_pk, pk):
-        # Đặt status thành approved, tạm chấp nhận kết quả nhưng chưa sử dụng để tính lương
-        employee = Employee.objects.get(pk=employee_pk)
+        employee = get_object_or_404(Employee, pk=employee_pk)
+
         attendance = employee.attendance.filter(pk=pk).first()
         if attendance is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -293,35 +270,44 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
 
     @action(detail=True, methods=['post'])
     def confirm(self, request, employee_pk, pk):
-        # Chỉnh sửa lại actual hour nếu có khiếu nại, confirm để đặt status là confirm.
-        # Dữ liệu này sẽ được sử dụng để tinh lương.
+        employee = get_object_or_404(Employee, pk=employee_pk)
+        author = request.user.employee
 
-        employee = Employee.objects.get(pk=employee_pk)
         attendance = employee.attendance.filter(pk=pk).first()
         if attendance is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if attendance.status == Attendance.AttendanceLogStatus.Pending:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data="Approve or reject first")
+        if attendance.status == Attendance.AttendanceLogStatus.Confirmed or \
+                attendance.status == Attendance.AttendanceLogStatus.Rejected:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        elif attendance.status == Attendance.AttendanceLogStatus.Pending:
+            attendance.status = Attendance.AttendanceLogStatus.Approved
+            attendance.reviewed_by = author
 
-        attendance.status = Attendance.AttendanceLogStatus.Confirmed
-        attendance.confirmed_by = request.user.employee
+            attendance.status = Attendance.AttendanceLogStatus.Confirmed
+            attendance.confirmed_by = author
+
+        elif attendance.status == Attendance.AttendanceLogStatus.Approved or \
+                attendance.status == Attendance.AttendanceLogStatus.Rejected:
+            attendance.status = Attendance.AttendanceLogStatus.Confirmed
+            attendance.confirmed_by = author
+        else:
+            raise Exception("Unreachable code")
 
         attendance.save()
-
         return Response()
 
     @action(detail=True, methods=['post'])
     def edit_actual_hours(self, request, employee_pk, pk):
-        employee = Employee.objects.get(pk=employee_pk)
+        employee = get_object_or_404(Employee, pk=employee_pk)
         attendance = employee.attendance.filter(pk=pk).first()
 
         # Validate
         if attendance is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if attendance.status == Attendance.AttendanceLogStatus.Confirmed:
-            return Response(status=status.HTTP_403_FORBIDDEN, data="Cannot edit confirmed attendance")
+        if attendance.status != Attendance.AttendanceLogStatus.Pending:
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         serializer = EditActualSerializer(data=request.data)
         if not serializer.is_valid():
@@ -337,15 +323,15 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
 
     @action(detail=True, methods=['post'])
     def edit_overtime_hours(self, request, employee_pk, pk):
-        employee = Employee.objects.get(pk=employee_pk)
+        employee = get_object_or_404(Employee, pk=employee_pk)
         attendance = employee.attendance.filter(pk=pk).first()
 
         # Validate
         if attendance is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if attendance.status == Attendance.AttendanceLogStatus.Confirmed:
-            return Response(status=status.HTTP_403_FORBIDDEN, data="Cannot edit confirmed attendance")
+        if attendance.status != Attendance.AttendanceLogStatus.Pending:
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         serializer = EditOvertimeSerializer(data=request.data)
         if not serializer.is_valid():

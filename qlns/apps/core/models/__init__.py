@@ -18,3 +18,4 @@ from .department import Department
 from .dependent import Dependent
 from .emergency_contact import EmergencyContact
 from .employee import Employee
+from .application_config import ApplicationConfig

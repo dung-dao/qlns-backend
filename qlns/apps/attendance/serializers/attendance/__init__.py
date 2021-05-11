@@ -1,4 +1,3 @@
 from .attendance_serializer import AttendanceSerializer
 
-from .over_time_type import OvertimeTypeSerializer
 from .employee_with_attendance_serializer import EmployeeWithAttendanceSerializer

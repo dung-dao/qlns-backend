@@ -1,6 +1,6 @@
 from django.db import models
 
 
-class OvertimeType(models.Model):
+class SalaryTemplate(models.Model):
     name = models.CharField(max_length=255, unique=True)
-    point_rate = models.FloatField()
+    is_default = models.BooleanField(default=False)

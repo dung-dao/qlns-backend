@@ -25,5 +25,6 @@ urlpatterns = [
     path('', include('qlns.apps.core.urls')),
     path('', include('qlns.apps.job.urls')),
     path('', include('qlns.apps.attendance.urls')),
+    path('', include('qlns.apps.payroll.urls')),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

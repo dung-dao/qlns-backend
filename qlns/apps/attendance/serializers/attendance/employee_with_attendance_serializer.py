@@ -13,6 +13,9 @@ class FilteredAttendanceListSerializer(serializers.ListSerializer):
             date__gte=self.context.get('start_date'),
             date__lte=self.context.get('end_date')
         )
+        period_id = self.context.get("period_id")
+        if period_id is not None:
+            data = data.filter(period=period_id)
         return super().to_representation(data)
 
 

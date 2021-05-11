@@ -11,3 +11,4 @@ from .emergency_contact_view import EmergencyContactView
 from .profile_view import ChangePasswordView, ChangeAvatarView
 from .bank_info_view import BankInfoView
 from .dependent_view import DependentView
+from .ApplicationConfigView import ApplicationConfigView

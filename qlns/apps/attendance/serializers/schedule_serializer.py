@@ -7,7 +7,7 @@ from qlns.apps.attendance.serializers.workday_serializer import WorkdaySerialize
 class ScheduleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Schedule
-        fields = ('id', 'name', 'workdays', 'time_zone')
+        fields = ('id', 'name', 'workdays',)
 
     workdays = WorkdaySerializer(read_only=False, many=True)
 

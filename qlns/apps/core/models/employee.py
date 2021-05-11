@@ -77,3 +77,6 @@ class Employee(models.Model):
     def get_employment_status(self):
         current_job = self.job_history.order_by('-timestamp').first()
         return current_job.employment_status.name if current_job is not None else "N/A"
+
+    def get_current_job(self):
+        return self.job_history.order_by('-timestamp').first()
