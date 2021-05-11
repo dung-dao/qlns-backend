@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                 ('cycle_start_date', models.DateTimeField()),
                 ('cycle_end_date', models.DateTimeField()),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('templates', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='payroll.salarytemplate')),
+                ('template', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='payroll.salarytemplate')),
             ],
         ),
     ]

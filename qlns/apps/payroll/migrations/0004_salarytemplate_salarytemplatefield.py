@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
                 ('code_name', models.CharField(max_length=255)),
                 ('display_name', models.CharField(max_length=255)),
                 ('define', models.CharField(blank=True, max_length=1024, null=True)),
-                ('templates', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='fields', to='payroll.salarytemplate')),
+                ('template', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='fields', to='payroll.salarytemplate')),
             ],
         ),
     ]
