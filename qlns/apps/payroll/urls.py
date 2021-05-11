@@ -18,6 +18,7 @@ router.register(r'salary_templates', _.SalaryTemplateView, basename='salary_temp
 
 employee_router = routers.NestedSimpleRouter(core_router, r'employees', lookup='employee')
 employee_router.register('salary_info', _.EmployeeSalaryView, basename='salary_info')
+employee_router.register('payslips', _.MyPayslipView, basename='payslip')
 
 urlpatterns = [
     path('', include(router.urls)),
