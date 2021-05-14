@@ -34,11 +34,9 @@ class Attendance(models.Model):
     def calculate_work_hours(self):
         trackers = attendance_models.Tracking.objects.filter(attendance=self.pk)
         for t in trackers:
-            t.actual_work_hours = t.get_actual_work_hours()
-            t.ot_work_hours = t.get_ot_hours()
+            t.calc_work_hours()
             t.save()
+
         self.actual_work_hours = sum(map(lambda e: e.actual_work_hours, trackers))
-
         self.ot_work_hours = sum(map(lambda e: e.ot_work_hours, trackers))
-
         self.save()

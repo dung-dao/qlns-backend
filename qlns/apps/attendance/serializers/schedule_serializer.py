@@ -1,3 +1,4 @@
+from django.db.transaction import atomic
 from rest_framework import serializers
 
 from qlns.apps.attendance.models import Schedule, WorkDay
@@ -31,6 +32,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
 
         return attrs
 
+    @atomic
     def create(self, validated_data):
         workdays = validated_data.pop('workdays')
 
@@ -44,6 +46,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
 
         return schedule
 
+    @atomic
     def update(self, instance, validated_data):
         instance.name = validated_data.get('name', instance.name)
         instance.save()
@@ -55,4 +58,6 @@ class ScheduleSerializer(serializers.ModelSerializer):
             workday = WorkDay(**wd)
             workday.schedule = instance
             workday.save()
+
+        instance.update_duration()
         return instance

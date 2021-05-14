@@ -23,23 +23,21 @@ class Tracking(models.Model):
     actual_work_hours = models.FloatField(default=0)
     ot_work_hours = models.FloatField(default=0)
 
-    def get_ot_hours(self):
-        if self.check_in_time is None or self.check_out_time is None:
-            return 0
-
-        duration = (self.check_out_time - self.check_in_time).seconds / 3600
-        return duration if self.is_overtime else 0
-
-    def get_actual_work_hours(self):
+    def calc_work_hours(self):
         if self.check_out_time is None:
-            return 0
+            self.ot_work_hours = 0.0
+            self.actual_work_hours = 0.0
+            return
 
-        schedule = self.attendance.schedule
-        return schedule.get_work_hours(self.check_in_time, self.check_out_time)
+        is_overtime = self.check_overtime()
+        self.ot_work_hours = (self.check_out_time - self.check_in_time).seconds / 3600 \
+            if is_overtime else 0.0
+        self.actual_work_hours = self.attendance.schedule.get_work_hours(self.check_in_time, self.check_out_time) \
+            if not is_overtime else 0.0
 
     def check_overtime(self):
         if self.check_out_time is None:
-            return False
+            raise Exception("Validate check out time not null!")
 
         schedule = self.attendance.schedule
         work_hours = schedule.get_work_hours(self.check_in_time, self.check_out_time)

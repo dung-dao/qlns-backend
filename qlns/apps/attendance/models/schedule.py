@@ -1,8 +1,11 @@
 from datetime import timedelta
 
 from django.db import models
+from django.db.models import Q
+from django.db.transaction import atomic
 from django.utils import timezone
 
+from qlns.apps.attendance import models as attendance_models
 from qlns.utils.constants import MAX_UTC_DATETIME
 from qlns.utils.datetime_utils import local_now
 
@@ -115,3 +118,19 @@ class Schedule(models.Model):
             )
 
         return duration
+
+    @atomic
+    def update_duration(self):
+        attendance_data = attendance_models.Attendance.objects \
+            .filter(Q(schedule=self.pk) &
+                    Q(status=attendance_models.Attendance.AttendanceLogStatus.Pending))
+
+        for at in attendance_data:
+            at.actual_hours_modification_note = None
+            at.actual_hours_modified = False
+            at.ot_hours_modification_note = None
+            at.ot_hours_modified = False
+            at.reviewed_by = None
+            at.save()
+
+            at.calculate_work_hours()
