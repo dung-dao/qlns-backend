@@ -1,10 +1,6 @@
-from datetime import datetime
-
-import pytz
 from django.db.models import Q
 from django.db.transaction import atomic, set_rollback
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
 from geopy import distance
 from rest_framework import status
 from rest_framework import viewsets, mixins
@@ -18,7 +14,7 @@ from qlns.apps.attendance.serializers.attendance.edit_actual_serializer import E
 from qlns.apps.attendance.serializers.attendance.edit_overtime_serializer import EditOvertimeSerializer
 from qlns.apps.core.models import Employee
 from qlns.utils.constants import MIN_UTC_DATETIME, MAX_UTC_DATETIME
-from qlns.utils.datetime_utils import parse_iso_datetime
+from qlns.utils.datetime_utils import parse_iso_datetime, local_now
 
 
 class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
@@ -55,7 +51,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         if schedule is None:
             return Response(status=status.HTTP_403_FORBIDDEN, data="NO_SCHEDULE")
 
-        today = timezone.now()
+        today = local_now()
         period = Period.get_or_create(today)
 
         locale_today_start = today.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -150,7 +146,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         schedule = employee.get_current_schedule()
 
         # Get today attendance
-        today = timezone.now()
+        today = local_now()
 
         locale_today_start = today.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -199,7 +195,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
             check_out_outside = None
 
         # Check Out
-        tracking.check_out_time = datetime.utcnow().replace(tzinfo=pytz.utc)
+        tracking.check_out_time = today
         tracking.check_out_lat = check_out_lat
         tracking.check_out_lng = check_out_lng
         tracking.check_out_note = check_out_note

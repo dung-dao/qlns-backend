@@ -4,6 +4,7 @@ from django.db import models
 from django.utils import timezone
 
 from qlns.utils.constants import MAX_UTC_DATETIME
+from qlns.utils.datetime_utils import local_now
 
 
 class Schedule(models.Model):
@@ -54,7 +55,7 @@ class Schedule(models.Model):
         return workday_dict
 
     def get_schedule_work_hours(self):
-        today = timezone.now()
+        today = local_now()
         one_week = timedelta(weeks=1)
         next_week = today + one_week
 
