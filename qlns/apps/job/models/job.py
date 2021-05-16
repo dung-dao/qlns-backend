@@ -22,11 +22,5 @@ class Job(models.Model):
     contract_start_date = models.DateField(blank=True, null=True)
     contract_end_date = models.DateField(blank=True, null=True)
 
-    # Termination info
-    is_terminated = models.BooleanField(default=False)
-    termination_reason = models.CharField(max_length=255, null=True)
-    termination_date = models.DateTimeField(null=True)
-    termination_note = models.CharField(max_length=1000, null=True, blank=True)
-
     event = models.CharField(max_length=100, choices=JobEvent.choices, default=JobEvent.Joined)
     timestamp = models.DateTimeField(auto_now_add=True)

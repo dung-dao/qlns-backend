@@ -11,10 +11,11 @@ class EmployeeSerializer(serializers.ModelSerializer):
         queryset=Country.objects.all(),
         allow_null=True, required=False)
     role = serializers.CharField(source="get_role", read_only=True)
+    status = serializers.CharField(source="get_status", read_only=True)
 
     class Meta:
         model = Employee
-        fields = '__all__'
+        exclude = ('current_job',)
 
     def create(self, validated_data):
         # Create user
