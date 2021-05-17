@@ -41,4 +41,5 @@ class SalaryTemplateSerializer(serializers.ModelSerializer):
             field = SalaryTemplateField(**f)
             field.template = instance
             field.save()
+
         return instance

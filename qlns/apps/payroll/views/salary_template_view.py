@@ -1,4 +1,7 @@
-from rest_framework import viewsets
+from django.db.models import ProtectedError
+from rest_framework import permissions
+from rest_framework import status
+from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -7,7 +10,14 @@ from qlns.apps.payroll.serializers.salary_template_field_serializer import Salar
 from qlns.apps.payroll.serializers.salary_template_serializer import SalaryTemplateSerializer
 
 
-class SalaryTemplateView(viewsets.ModelViewSet):
+class SalaryTemplateView(
+    viewsets.GenericViewSet,
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin
+):
+    permission_classes = (permissions.IsAuthenticated,)
     serializer_class = SalaryTemplateSerializer
     queryset = SalaryTemplate.objects.prefetch_related('fields').all()
 
@@ -18,3 +28,31 @@ class SalaryTemplateView(viewsets.ModelViewSet):
         )
         list_serializer = SalaryTemplateFieldSerializer(system_fields, many=True)
         return Response(data=list_serializer.data)
+
+    def update(self, request, pk=None):
+        template = SalaryTemplate.objects.filter(pk=pk) \
+            .prefetch_related('payrolls') \
+            .first()
+        if template is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if template.payrolls \
+                .filter(status='Confirmed') \
+                .exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="Denied")
+
+        serializer = self.serializer_class(instance=template, data=request.data)
+        if not serializer.is_valid():
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
+        serializer.save()
+
+        for p in template.payrolls.all():
+            p.calculate_salary()
+
+        return Response(data=serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            super(SalaryTemplateView, self).destroy(request, *args, **kwargs)
+        except ProtectedError:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="Denied")

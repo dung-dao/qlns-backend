@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from qlns.apps.attendance import models as attendance_models
 from qlns.utils.constants import MAX_UTC_DATETIME
-from qlns.utils.datetime_utils import local_now
+from qlns.utils.datetime_utils import local_now, get_next_date
 
 
 class Schedule(models.Model):
@@ -73,23 +73,22 @@ class Schedule(models.Model):
 
         i_date = start_time
         while i_date < end_time:
-            weekday = i_date.weekday()
-            workday_dict = self.shift_workday(i_date, weekday)
-            if workday_dict is None:
-                # Shift i_date to work date
-                next_day = i_date + timedelta(days=1)
-                while self.shift_workday(next_day, next_day.weekday()) is None:
-                    next_day += timedelta(days=1)
+            workday_dict = self.shift_workday(i_date, i_date.weekday())
 
-                next_work_day_dict = self.shift_workday(next_day, next_day.weekday())
-
-                i_date = min(
-                    next_work_day_dict.get("morning_from", MAX_UTC_DATETIME),
-                    next_work_day_dict.get("afternoon_from", MAX_UTC_DATETIME),
+            # Shift i_date to the nearest workday
+            while workday_dict is None:
+                i_date = get_next_date(i_date)
+                workday_dict = self.shift_workday(
+                    i_date, i_date.weekday()
                 )
 
-                if i_date >= end_time:
-                    break
+            i_date = min(
+                workday_dict.get("morning_from", MAX_UTC_DATETIME),
+                workday_dict.get("afternoon_from", MAX_UTC_DATETIME)
+            )
+
+            if i_date >= end_time:
+                break
 
             # morning duration
             morning_start = max(workday_dict.get("morning_from", i_date), i_date)
@@ -105,17 +104,7 @@ class Schedule(models.Model):
 
             duration += morning_hours + afternoon_hours
 
-            # Shift i_date to work date
-            next_day = i_date + timedelta(days=1)
-            while self.shift_workday(next_day, next_day.weekday()) is None:
-                next_day += timedelta(days=1)
-
-            next_work_day_dict = self.shift_workday(next_day, next_day.weekday())
-
-            i_date = min(
-                next_work_day_dict.get("morning_from", MAX_UTC_DATETIME),
-                next_work_day_dict.get("afternoon_from", MAX_UTC_DATETIME),
-            )
+            i_date = get_next_date(i_date)
 
         return duration
 

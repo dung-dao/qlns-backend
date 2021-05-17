@@ -10,15 +10,21 @@ from qlns.apps.attendance.models import Attendance, TimeOff, Holiday
 from qlns.apps.core.models import Employee, ApplicationConfig
 from qlns.apps.payroll.models import SalaryTemplateField
 from qlns.apps.payroll.models.PayslipValue import PayslipValue
+from qlns.apps.payroll.models.payroll_utils import PIT_VN
 from qlns.apps.payroll.models.payslip import Payslip
 from qlns.utils.constants import MIN_UTC_DATETIME
 
 
 class Payroll(models.Model):
+    class Status(models.TextChoices):
+        Temporary = 'Temporary'
+        Confirmed = 'Confirmed'
+
     name = models.CharField(max_length=255)
-    template = models.ForeignKey(to='SalaryTemplate', on_delete=models.PROTECT)
+    template = models.ForeignKey(to='SalaryTemplate', on_delete=models.PROTECT, related_name='payrolls')
     period = models.ForeignKey(to='attendance.Period', on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=50, choices=Status.choices, default=Status.Temporary)
 
     @staticmethod
     def get_employee_info(employee):
@@ -208,6 +214,8 @@ class Payroll(models.Model):
 
     @atomic
     def calculate_salary(self):
+        if self.status == Payroll.Status.Confirmed:
+            return
         # Prepare data
 
         # Get templates
@@ -222,7 +230,9 @@ class Payroll(models.Model):
             .prefetch_related('salary_info') \
             .filter(Q(job_history__isnull=False) &
                     Q(salary_info__isnull=False) &
-                    Q(employee_schedule__isnull=False))\
+                    Q(employee_schedule__isnull=False)) \
+            .filter(current_job__isnull=False) \
+            .filter(current_job__isnull=False) \
             .distinct()
 
         self.payslips.all().delete()
@@ -250,22 +260,6 @@ class Payroll(models.Model):
                 **work_info,
             }
 
-            def PIT_VN(thu_nhap_tinh_thue):
-                if thu_nhap_tinh_thue <= 5000000:
-                    return 5 / 100 * thu_nhap_tinh_thue
-                elif thu_nhap_tinh_thue <= 10000000:
-                    return 10 / 100 * thu_nhap_tinh_thue - 250000
-                elif thu_nhap_tinh_thue <= 18000000:
-                    return 15 / 100 * thu_nhap_tinh_thue - 750000
-                elif thu_nhap_tinh_thue <= 32000000:
-                    return 20 / 100 * thu_nhap_tinh_thue - 1650000
-                elif thu_nhap_tinh_thue <= 52000000:
-                    return 25 / 100 * thu_nhap_tinh_thue - 3250000
-                elif thu_nhap_tinh_thue <= 80000000:
-                    return 30 / 100 * thu_nhap_tinh_thue - 5850000
-                else:
-                    return 35 / 100 * thu_nhap_tinh_thue - 9850000
-
             functions = formulas.get_functions()
             functions['PIT_VN'] = PIT_VN
 
@@ -284,7 +278,7 @@ class Payroll(models.Model):
                     elif type(value) == int or type(value) == float or type(value) == Decimal:
                         payslip_value.num_value = value
                     else:
-                        raise Exception('Unreachable code')
+                        raise Exception('Unresolved datatype')
 
                 elif field.type == SalaryTemplateField.SalaryFieldType.Formula:
                     formula = formulas.Parser().ast(f'={field.define}')[1].compile()

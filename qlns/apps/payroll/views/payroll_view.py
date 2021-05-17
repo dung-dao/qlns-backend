@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -22,7 +22,7 @@ class PayrollView(
     mixins.DestroyModelMixin,
     mixins.RetrieveModelMixin,
 ):
-    # permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated,)
     serializer_class = PayrollSerializer
     queryset = Payroll.objects.all()
 
@@ -42,10 +42,18 @@ class PayrollView(
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['post'])
-    def calculate(self, request, pk):
-        payroll = Payroll.objects.filter(pk=pk).first()
-        payroll.calculate_salary()
+    def confirm(self, request, pk):
+        payroll = get_object_or_404(Payroll, pk=pk)
+        payroll.status = Payroll.Status.Confirmed
+        payroll.save()
+        return Response()
 
+    @action(detail=True, methods=['post'])
+    def calculate(self, request, pk):
+        payroll = get_object_or_404(Payroll, pk=pk)
+        if payroll.status == Payroll.Status.Confirmed:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="Cannot modify confirmed payroll")
+        payroll.calculate_salary()
         return Response()
 
     @action(detail=True, methods=['get'])
