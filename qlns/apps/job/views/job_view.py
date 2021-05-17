@@ -1,9 +1,14 @@
-from rest_framework import viewsets, mixins
-from rest_framework.response import Response
-from rest_framework import status
+from django.db.transaction import atomic
+from django.shortcuts import get_object_or_404
 from rest_framework import permissions
-from qlns.apps.job.models import Job
-from qlns.apps.job.serializers import JobSerializer
+from rest_framework import status
+from rest_framework import viewsets, mixins
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+from qlns.apps.core import models as core_models
+from qlns.apps.job import models as job_models
+from qlns.apps.job import serializers as job_serializer
 
 
 class JobView(viewsets.GenericViewSet,
@@ -11,14 +16,51 @@ class JobView(viewsets.GenericViewSet,
               mixins.RetrieveModelMixin,
               mixins.CreateModelMixin,
               mixins.DestroyModelMixin):
-    serializer_class = JobSerializer
+    serializer_class = job_serializer.JobSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
-        return Job.objects.filter(owner=self.kwargs['employee_pk']).order_by('-timestamp')
+        return job_models.Job.objects.filter(owner=self.kwargs['employee_pk']).order_by('-timestamp')
 
+    @atomic
     def create(self, request, *args, **kwargs):
         employee_id = self.kwargs['employee_pk']
-        if 'owner' not in request.data or employee_id != str(request.data['owner']):
-            return Response(status=status.HTTP_400_BAD_REQUEST, data="Invalid owner")
-        return super(JobView, self).create(request, *args, **kwargs)
+        employee = get_object_or_404(core_models.Employee, pk=employee_id)
+        serializer = job_serializer.JobSerializer(data=request.data, context={"employee": employee})
+        if not serializer.is_valid():
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
+
+        serializer.save()
+        employee.current_job = serializer.instance
+        employee.save()
+
+        return Response(data=serializer.data)
+
+    @atomic
+    @action(detail=False, methods=['post'])
+    def terminate_employment(self, request, *args, **kwargs):
+        employee = get_object_or_404(core_models.Employee, pk=self.kwargs['employee_pk'])
+        # TODO: Check employee employment
+        if not employee.is_working():
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="INACTIVE_EMPLOYEE")
+
+        job = employee.get_current_job()
+
+        # Check job
+        serializer = job_serializer.TerminationSerializer(
+            data=self.request.data,
+            context={"job": job})
+
+        if not serializer.is_valid():
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
+
+        job.pk = None
+        job.event = job_models.Job.JobEvent.Terminated
+        job.save()
+
+        serializer.save()
+
+        employee.current_job = job
+        employee.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)

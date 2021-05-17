@@ -1,9 +1,9 @@
 from rest_framework import viewsets
 
-from qlns.apps.job.models import JobTitle
-from qlns.apps.job.serializers.job_title_serializer import JobTitleSerializer
+from qlns.apps.job import models as job_models
+from qlns.apps.job import serializers as job_serializer
 
 
 class JobTitleView(viewsets.ModelViewSet):
-    serializer_class = JobTitleSerializer
-    queryset = JobTitle.objects.all()
+    serializer_class = job_serializer.JobTitleSerializer
+    queryset = job_models.JobTitle.objects.all()

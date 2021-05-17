@@ -1,11 +1,11 @@
 from rest_framework import serializers
 
-from qlns.apps.job import models
+from qlns.apps.job import models as job_models
 
 
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Location
+        model = job_models.Location
         fields = '__all__'
 
     def validate(self, attrs):

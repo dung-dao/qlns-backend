@@ -7,7 +7,7 @@ router = routers.SimpleRouter()
 router.register('job_titles', job_views.JobTitleView, basename='job_title')
 router.register('locations', job_views.LocationView, basename='location')
 router.register('employment_statuses', job_views.EmploymentStatusView, basename='employment_status')
-router.register('job_events', job_views.JobEventView, basename='job_event')
+router.register('termination_reasons', job_views.TerminationReasonView, basename='termination_reason')
 
 employee_router = routers.NestedSimpleRouter(core_router, r'employees', lookup='employee')
 employee_router.register('jobs', job_views.JobView, basename='job')

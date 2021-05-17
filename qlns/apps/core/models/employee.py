@@ -1,14 +1,14 @@
-from django.db import models
-from django.contrib.auth.models import User, Permission
-from .country import Country
-import uuid
 import os
+import uuid
+
+from django.contrib.auth.models import User
+from django.db import models
 
 from ...attendance.models import EmployeeSchedule
 
 
 def upload_to(instance, filename):
-    _, file_extension = os.path.splitext('/'+filename)
+    _, file_extension = os.path.splitext('/' + filename)
     return 'avatars/' + str(uuid.uuid4()) + file_extension
 
 
@@ -51,6 +51,7 @@ class Employee(models.Model):
 
     # related data
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee')
+    current_job = models.ForeignKey(to='job.Job', on_delete=models.SET_NULL, null=True)
 
     def get_role(self):
         if self.user.is_superuser:
@@ -80,3 +81,17 @@ class Employee(models.Model):
 
     def get_current_job(self):
         return self.job_history.order_by('-timestamp').first()
+
+    def is_working(self):
+        if self.current_job is not None and hasattr(self.current_job, 'termination'):
+            return False
+        return True
+
+    def get_status(self):
+        if self.current_job is not None:
+            if hasattr(self.current_job, 'termination'):
+                return "Terminated"
+            else:
+                return "Working"
+        elif self.current_job is None:
+            return "NewHired"

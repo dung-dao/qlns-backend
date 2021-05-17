@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
         ('payroll', '0009_employeesalary_basic_salary'),
     ]
 
-    query = "INSERT INTO qlns.payroll_salarysystemfield (name, code_name, description) VALUES(%s, %s, %s);"
+    query = "INSERT INTO payroll_salarysystemfield (name, code_name, description) VALUES(%s, %s, %s);"
 
     operations = [
         migrations.RunSQL(

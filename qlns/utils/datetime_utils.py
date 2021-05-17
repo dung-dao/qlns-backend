@@ -13,3 +13,7 @@ def parse_iso_datetime(date_str, default=None):
         return default
     except TypeError:
         return default
+
+
+def local_now():
+    return timezone.localtime(timezone.now())
