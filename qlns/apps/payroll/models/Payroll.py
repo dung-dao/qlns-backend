@@ -1,16 +1,15 @@
-from decimal import Decimal
-
 import formulas
 from django.db import models
 from django.db.models import Q
 from django.db.transaction import atomic
 from django.utils import timezone
+from formulas.errors import ParenthesesError
 
 from qlns.apps.attendance.models import Attendance, TimeOff, Holiday
 from qlns.apps.core.models import Employee, ApplicationConfig
 from qlns.apps.payroll.models import SalaryTemplateField
 from qlns.apps.payroll.models.PayslipValue import PayslipValue
-from qlns.apps.payroll.models.payroll_utils import PIT_VN
+from qlns.apps.payroll.models.payroll_utils import PIT_VN, convert_to_datestring
 from qlns.apps.payroll.models.payslip import Payslip
 from qlns.utils.constants import MIN_UTC_DATETIME
 
@@ -35,7 +34,7 @@ class Payroll(models.Model):
             "full_name": f'{employee.first_name} {employee.last_name}'.strip(),
             "email": employee.email,
             "gender": employee.gender,
-            "birthday": employee.date_of_birth,
+            "birthday": convert_to_datestring(employee.date_of_birth) if employee.date_of_birth is not None else None,
             "phone": employee.phone,
             "nationality": employee.nationality.name if employee.nationality is not None else None,
             "personal_tax_id": employee.personal_tax_id,
@@ -84,10 +83,14 @@ class Payroll(models.Model):
             "location": job.location.name if job.location is not None else None,
             "employment_status": job.employment_status.name if job.employment_status is not None else None,
 
-            "probation_start_date": job.probation_start_date,
-            "probation_end_date": job.probation_end_date,
-            "contract_start_date": job.contract_start_date,
-            "contract_end_date": job.contract_end_date,
+            "probation_start_date": convert_to_datestring(
+                job.probation_start_date) if job.probation_start_date is not None else None,
+            "probation_end_date": convert_to_datestring(
+                job.probation_end_date) if job.probation_end_date is not None else None,
+            "contract_start_date": convert_to_datestring(
+                job.contract_start_date) if job.contract_start_date is not None else None,
+            "contract_end_date": convert_to_datestring(
+                job.contract_end_date) if job.contract_end_date is not None else None,
         }
 
     @staticmethod
@@ -212,28 +215,28 @@ class Payroll(models.Model):
             "sum_late": count_late_attendance
         }
 
-    @atomic
     def calculate_salary(self):
         if self.status == Payroll.Status.Confirmed:
             return
         # Prepare data
-
         # Get templates
         template = self.template
         template_fields = template.fields.order_by('index')
 
-        # Prepare calculation data
-
+        # Filter employees and load related data
         employees = Employee.objects \
-            .prefetch_related('bank_info') \
-            .prefetch_related('job_history') \
-            .prefetch_related('salary_info') \
-            .filter(Q(job_history__isnull=False) &
-                    Q(salary_info__isnull=False) &
+            .filter(Q(salary_info__isnull=False) &
                     Q(employee_schedule__isnull=False)) \
             .filter(current_job__isnull=False) \
-            .filter(current_job__isnull=False) \
             .distinct()
+
+        employee_query = "SELECT DISTINCT employee.* FROM core_employee employee left join payroll_employeesalary " \
+                         "em_salary ON em_salary.owner_id = employee.id left JOIN attendance_employeeschedule " \
+                         "em_schedule ON em_schedule.owner_id = employee.id left join job_job job on " \
+                         "employee.current_job_id = job.id left join job_termination termination on " \
+                         "termination.job_id = job.id WHERE NOT ISNULL(em_salary.id) AND NOT ISNULL(em_schedule.id) " \
+                         "AND (ISNULL(termination.`date`) OR termination.`date` > %s)".strip()
+        employees = Employee.objects.raw(employee_query, [self.period.start_date.isoformat()])
 
         self.payslips.all().delete()
         self.save()
@@ -272,13 +275,13 @@ class Payroll(models.Model):
 
                 if field.type == SalaryTemplateField.SalaryFieldType.SystemField:
                     value = calculation_dict[field.code_name]
-                    t = type(value)
-                    if type(value) == str:
+
+                    # Set value based on defined datatype
+                    if field.datatype == SalaryTemplateField.Datatype.Text:
                         payslip_value.str_value = value
-                    elif type(value) == int or type(value) == float or type(value) == Decimal:
+                    elif field.datatype == SalaryTemplateField.Datatype.Number or \
+                            field.datatype == SalaryTemplateField.Datatype.Currency:
                         payslip_value.num_value = value
-                    else:
-                        raise Exception('Unresolved datatype')
 
                 elif field.type == SalaryTemplateField.SalaryFieldType.Formula:
                     formula = formulas.Parser().ast(f'={field.define}')[1].compile()
@@ -288,9 +291,21 @@ class Payroll(models.Model):
                         if key.upper() in inputs:
                             formula_context[key.upper()] = calculation_dict[key]
                     try:
-                        ans = float(formula(**formula_context))
-                        calculation_dict[field.code_name] = ans
-                        payslip_value.num_value = ans
+                        ans = formula(**formula_context)
+                        # Convert & set value based on defined datatype
+                        if field.datatype == SalaryTemplateField.Datatype.Text:
+                            value = str(ans)
+                            calculation_dict[field.code_name] = value
+                            payslip_value.str_value = value
+                        elif field.datatype == SalaryTemplateField.Datatype.Number or \
+                                field.datatype == SalaryTemplateField.Datatype.Currency:
+                            value = float(ans)
+                            calculation_dict[field.code_name] = value
+                            payslip_value.num_value = value
                     except ValueError:
-                        raise ValueError('Cannot convert to float')
+                        raise ValueError('ValueError in formula')
+                    except TypeError:
+                        raise TypeError('Invalid formula datatype')
+                    except Exception:
+                        raise Exception
                 payslip_value.save()

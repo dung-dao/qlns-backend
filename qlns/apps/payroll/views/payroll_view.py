@@ -1,6 +1,7 @@
 import xlwt
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
+from django.db.transaction import atomic
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
@@ -48,12 +49,16 @@ class PayrollView(
         payroll.save()
         return Response()
 
+    @atomic
     @action(detail=True, methods=['post'])
     def calculate(self, request, pk):
         payroll = get_object_or_404(Payroll, pk=pk)
         if payroll.status == Payroll.Status.Confirmed:
             return Response(status=status.HTTP_400_BAD_REQUEST, data="Cannot modify confirmed payroll")
-        payroll.calculate_salary()
+        try:
+            payroll.calculate_salary()
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="Invalid template")
         return Response()
 
     @action(detail=True, methods=['get'])

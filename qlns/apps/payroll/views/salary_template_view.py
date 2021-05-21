@@ -1,4 +1,6 @@
+from django.db import transaction
 from django.db.models import ProtectedError
+from django.db.transaction import atomic
 from rest_framework import permissions
 from rest_framework import status
 from rest_framework import viewsets, mixins
@@ -29,6 +31,7 @@ class SalaryTemplateView(
         list_serializer = SalaryTemplateFieldSerializer(system_fields, many=True)
         return Response(data=list_serializer.data)
 
+    @atomic
     def update(self, request, pk=None):
         template = SalaryTemplate.objects.filter(pk=pk) \
             .prefetch_related('payrolls') \
@@ -46,8 +49,12 @@ class SalaryTemplateView(
             return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
         serializer.save()
 
-        for p in template.payrolls.all():
-            p.calculate_salary()
+        try:
+            for p in template.payrolls.all():
+                p.calculate_salary()
+        except Exception:
+            transaction.set_rollback(True)
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="Invalid template")
 
         return Response(data=serializer.data)
 
