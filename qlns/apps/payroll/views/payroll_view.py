@@ -1,4 +1,6 @@
-import xlwt
+import io
+
+import xlsxwriter
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.db.transaction import atomic
@@ -6,7 +8,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from rest_framework import status, permissions
+from rest_framework import status
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -23,7 +25,7 @@ class PayrollView(
     mixins.DestroyModelMixin,
     mixins.RetrieveModelMixin,
 ):
-    permission_classes = (permissions.IsAuthenticated,)
+    # permission_classes = (permissions.IsAuthenticated,)
     serializer_class = PayrollSerializer
     queryset = Payroll.objects.all()
 
@@ -67,49 +69,118 @@ class PayrollView(
         if payroll is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        fields = payroll.template.fields.all()
-        columns = list(map(lambda e: e.display_name, fields))
+        # Headers
+        fields = list(payroll.template.fields.all())
+        column_names = list(map(lambda e: e.display_name, fields))
 
         # Prepare data
         payroll_name = payroll.name
         for sp in ['\\', '/', '*', '[', ']', ':', '?']:
             payroll_name = payroll_name.replace(sp, ' ').strip()
 
-        payslips = payroll.payslips.all()
-        wb = xlwt.Workbook(encoding='latin-1')
+        payslips = payroll.payslips.prefetch_related('values').all()
 
-        worksheet = wb.add_sheet(payroll_name)
+        # Create workbook
+        output = io.BytesIO()
+        wb = xlsxwriter.Workbook(output)
 
-        header_style = xlwt.XFStyle()
-        header_style.font.bold = True
+        worksheet = wb.add_worksheet(payroll_name)
 
-        iter_row = 0
+        # Styles
+        header_style = wb.add_format(
+            {
+                'bold': True,
+                'font_size': 13,
+                'align': 'center',
+                'border': 1,
+                'bg_color': '#f2f2f2',
+                'font_name': 'Times New Roman',
+            }
+        )
 
-        title_style = xlwt.XFStyle()
-        title_style.font.height = 16 * 16
-        title_style.font.bold = True
+        normal_style = wb.add_format(
+            {
+                'font_size': 13,
+                'bold': False,
+                'font_name': 'Times New Roman',
+            }
+        )
 
-        worksheet.write(iter_row, 0, payroll_name, title_style)
+        currency_style = wb.add_format(
+            {
+                'num_format': '#,##0 đ',
+                'font_size': 13,
+                'bold': False,
+                'font_name': 'Times New Roman',
+            }
+        )
 
-        iter_row += 2
+        title_style = wb.add_format(
+            {
+                # 'bold': True,
+                'font_size': 16,
+                'font_name': 'Times New Roman',
+            }
+        )
 
-        for col in range(len(columns)):
-            worksheet.write(iter_row, col, columns[col], header_style)
+        normal_cell_style = wb.add_format(
+            {
+                'font_size': 13,
+                'bold': False,
+                'font_name': 'Times New Roman',
+                'border': 1,
+            }
+        )
 
-        row_style = xlwt.XFStyle()
+        currency_cell_style = wb.add_format(
+            {
+                'num_format': '#,##0 đ',
+                'font_size': 13,
+                'bold': False,
+                'font_name': 'Times New Roman',
+                'border': 1,
+            }
+        )
 
-        iter_row += 1
+        # Write title
+        worksheet.write(0, 0, payroll_name, title_style)
+
+        # Write headers
+        for col in range(len(column_names)):
+            worksheet.write(2, col, column_names[col], header_style)
+            worksheet.set_column(col, col, len(column_names[col]) + 8)
+
+        # Write data rows
+        i_row = 3
         for payslip in payslips:
-            values = list(map(lambda e: e.num_value if e.num_value is not None else e.str_value, payslip.values.all()))
-            for i_val in range(len(values)):
-                worksheet.write(iter_row, i_val, values[i_val], row_style)
-            iter_row += 1
+            values = payslip.values.all().order_by('field__index')
+            for i_val in range(values.count()):
+                value = None
+                cell_style = None
+
+                if values[i_val].field.datatype == 'Text':
+                    value = values[i_val].str_value
+                    cell_style = normal_cell_style
+
+                elif values[i_val].field.datatype == 'Number' or \
+                        values[i_val].field.datatype == 'Currency':
+                    value = values[i_val].num_value
+                    cell_style = currency_cell_style
+
+                worksheet.write(i_row, i_val, value, cell_style)
+            i_row += 1
+
+        wb.close()
 
         # Response
-        response = HttpResponse(content_type='application/ms-excel')
-        response['Content-Disposition'] = f'attachment; filename="{payroll_name}.xls"'
+        output.seek(0)
+        filename = payroll_name
+        response = HttpResponse(
+            output.read(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename=%s.xlsx' % filename
 
-        wb.save(response)
         return response
 
     @action(detail=True, methods=['post'])
@@ -134,6 +205,7 @@ class PayrollView(
                 'title': payslip_name,
                 'values': values,
             }
+
             payslip_content = render_to_string('email_payslip.html', html_context)
             payslip_text = strip_tags(payslip_content)
             email = EmailMultiAlternatives(
