@@ -1,4 +1,5 @@
 import io
+import math
 
 import xlsxwriter
 from django.conf import settings
@@ -186,12 +187,25 @@ class PayrollView(
 
         for payslip in payroll.payslips.all():
             email_address = payslip.owner.email
-            values = list(map(
-                lambda e: {
+
+            def map_value(e):
+                value = None
+                if e.num_value is not None:
+                    raw_value = e.num_value
+                    if math.floor(raw_value) - raw_value == 0:
+                        value = int(e.num_value)
+                    else:
+                        value = e.num_value
+                else:
+                    value = e.str_value
+                return {
                     'name': e.field.display_name,
-                    'value': e.num_value if e.num_value is not None else e.str_value
-                },
-                payslip.values.all().order_by('field__index')))
+                    'value': value if e.field.datatype != "Currency" else str(value) + ' ₫'
+                }
+
+            values = list(map(
+                map_value,
+                payslip.values.select_related('field').all().order_by('field__index')))
 
             payroll_name = 'Phiếu lương tháng 4 2021'
             payslip_name = f'Phiếu lương {payroll.period.start_date.month}/{payroll.period.start_date.year}'
