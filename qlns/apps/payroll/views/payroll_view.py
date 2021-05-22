@@ -73,6 +73,8 @@ class PayrollView(
         fields = list(payroll.template.fields.all())
         column_names = list(map(lambda e: e.display_name, fields))
 
+        column_width = list(map(lambda s: len(s), column_names))
+
         # Prepare data
         payroll_name = payroll.name
         for sp in ['\\', '/', '*', '[', ']', ':', '?']:
@@ -106,18 +108,8 @@ class PayrollView(
             }
         )
 
-        currency_style = wb.add_format(
-            {
-                'num_format': '#,##0 đ',
-                'font_size': 13,
-                'bold': False,
-                'font_name': 'Times New Roman',
-            }
-        )
-
         title_style = wb.add_format(
             {
-                # 'bold': True,
                 'font_size': 16,
                 'font_name': 'Times New Roman',
             }
@@ -134,7 +126,7 @@ class PayrollView(
 
         currency_cell_style = wb.add_format(
             {
-                'num_format': '#,##0 đ',
+                'num_format': '#,##0₫',
                 'font_size': 13,
                 'bold': False,
                 'font_name': 'Times New Roman',
@@ -148,7 +140,6 @@ class PayrollView(
         # Write headers
         for col in range(len(column_names)):
             worksheet.write(2, col, column_names[col], header_style)
-            worksheet.set_column(col, col, len(column_names[col]) + 8)
 
         # Write data rows
         i_row = 3
@@ -166,9 +157,13 @@ class PayrollView(
                         values[i_val].field.datatype == 'Currency':
                     value = values[i_val].num_value
                     cell_style = currency_cell_style
-
+                if len(str(value)) > column_width[i_val]:
+                    column_width[i_val] = len(str(value))
                 worksheet.write(i_row, i_val, value, cell_style)
             i_row += 1
+
+        for col in range(len(column_names)):
+            worksheet.set_column(col, col, column_width[col] + 4)
 
         wb.close()
 
@@ -176,7 +171,7 @@ class PayrollView(
         output.seek(0)
         filename = payroll_name
         response = HttpResponse(
-            output.read(),
+            output,
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
         response['Content-Disposition'] = 'attachment; filename=%s.xlsx' % filename
