@@ -17,6 +17,7 @@ from rest_framework.response import Response
 from qlns.apps.attendance.models import Period
 from qlns.apps.payroll.models import Payroll
 from qlns.apps.payroll.serializers.payroll_serializer import PayrollSerializer
+from qlns.utils.datetime_utils import to_date_string
 
 
 class PayrollView(
@@ -97,7 +98,6 @@ class PayrollView(
                 'align': 'center',
                 'border': 1,
                 'bg_color': '#f2f2f2',
-                'font_name': 'Times New Roman',
             }
         )
 
@@ -105,14 +105,13 @@ class PayrollView(
             {
                 'font_size': 13,
                 'bold': False,
-                'font_name': 'Times New Roman',
             }
         )
 
         title_style = wb.add_format(
             {
                 'font_size': 16,
-                'font_name': 'Times New Roman',
+                'bold': True,
             }
         )
 
@@ -120,7 +119,6 @@ class PayrollView(
             {
                 'font_size': 13,
                 'bold': False,
-                'font_name': 'Times New Roman',
                 'border': 1,
             }
         )
@@ -130,20 +128,23 @@ class PayrollView(
                 'num_format': '#,##0₫',
                 'font_size': 13,
                 'bold': False,
-                'font_name': 'Times New Roman',
                 'border': 1,
             }
         )
 
         # Write title
         worksheet.write(0, 0, payroll_name, title_style)
+        worksheet.set_row(0, 24)
 
         # Write headers
         for col in range(len(column_names)):
-            worksheet.write(2, col, column_names[col], header_style)
+            worksheet.write(3, col, column_names[col], header_style)
+
+        worksheet.write(1, 0,
+                        f"Chu kỳ lương: {to_date_string(payroll.period.start_date)} - {to_date_string(payroll.period.end_date)}")
 
         # Write data rows
-        i_row = 3
+        i_row = 4
         for payslip in payslips:
             values = payslip.values.all().order_by('field__index')
             for i_val in range(values.count()):
@@ -213,6 +214,9 @@ class PayrollView(
             html_context = {
                 'title': payslip_name,
                 'values': values,
+                'cycle_start_date': to_date_string(payroll.period.start_date),
+                'cycle_end_date': to_date_string(payroll.period.end_date),
+                'hostname': ''.join(['http://', request.get_host()])
             }
 
             payslip_content = render_to_string('email_payslip.html', html_context)

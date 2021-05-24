@@ -1,8 +1,3 @@
-from datetime import date
-
-from django.utils import timezone
-
-
 def PIT_VN(thu_nhap_tinh_thue):
     if thu_nhap_tinh_thue <= 5000000:
         return 5 / 100 * thu_nhap_tinh_thue
@@ -18,10 +13,3 @@ def PIT_VN(thu_nhap_tinh_thue):
         return 30 / 100 * thu_nhap_tinh_thue - 5850000
     else:
         return 35 / 100 * thu_nhap_tinh_thue - 9850000
-
-
-def convert_to_datestring(dt):
-    if isinstance(dt, date):
-        return dt.strftime('%d/%m/%Y')
-    local_date = timezone.localtime(dt)
-    return local_date.strftime('%d/%m/%Y')

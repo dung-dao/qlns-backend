@@ -1,17 +1,16 @@
 import formulas
 from django.db import models
 from django.db.models import Q
-from django.db.transaction import atomic
 from django.utils import timezone
-from formulas.errors import ParenthesesError
 
 from qlns.apps.attendance.models import Attendance, TimeOff, Holiday
 from qlns.apps.core.models import Employee, ApplicationConfig
 from qlns.apps.payroll.models import SalaryTemplateField
 from qlns.apps.payroll.models.PayslipValue import PayslipValue
-from qlns.apps.payroll.models.payroll_utils import PIT_VN, convert_to_datestring
+from qlns.apps.payroll.models.payroll_utils import PIT_VN
 from qlns.apps.payroll.models.payslip import Payslip
 from qlns.utils.constants import MIN_UTC_DATETIME
+from qlns.utils.datetime_utils import to_date_string
 
 
 class Payroll(models.Model):
@@ -34,7 +33,7 @@ class Payroll(models.Model):
             "full_name": f'{employee.first_name} {employee.last_name}'.strip(),
             "email": employee.email,
             "gender": employee.gender,
-            "birthday": convert_to_datestring(employee.date_of_birth) if employee.date_of_birth is not None else None,
+            "birthday": to_date_string(employee.date_of_birth) if employee.date_of_birth is not None else None,
             "phone": employee.phone,
             "nationality": employee.nationality.name if employee.nationality is not None else None,
             "personal_tax_id": employee.personal_tax_id,
@@ -83,13 +82,13 @@ class Payroll(models.Model):
             "location": job.location.name if job.location is not None else None,
             "employment_status": job.employment_status.name if job.employment_status is not None else None,
 
-            "probation_start_date": convert_to_datestring(
+            "probation_start_date": to_date_string(
                 job.probation_start_date) if job.probation_start_date is not None else None,
-            "probation_end_date": convert_to_datestring(
+            "probation_end_date": to_date_string(
                 job.probation_end_date) if job.probation_end_date is not None else None,
-            "contract_start_date": convert_to_datestring(
+            "contract_start_date": to_date_string(
                 job.contract_start_date) if job.contract_start_date is not None else None,
-            "contract_end_date": convert_to_datestring(
+            "contract_end_date": to_date_string(
                 job.contract_end_date) if job.contract_end_date is not None else None,
         }
 

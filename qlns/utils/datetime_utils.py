@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, date
 
 import pytz
 from dateutil.parser import isoparse
@@ -26,3 +26,10 @@ def get_next_date(dt):
     next_day_first_moment = (current_moment + timedelta(days=1)) \
         .replace(hour=0, minute=0, second=0, microsecond=0)
     return next_day_first_moment
+
+
+def to_date_string(dt):
+    if isinstance(dt, date):
+        return dt.strftime('%d/%m/%Y')
+    local_date = timezone.localtime(dt)
+    return local_date.strftime('%d/%m/%Y')
