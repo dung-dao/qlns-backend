@@ -59,8 +59,9 @@ class PayrollView(
         payroll = get_object_or_404(Payroll, pk=pk)
         if payroll.status != Payroll.Status.Confirmed:
             payroll.status = Payroll.Status.Confirmed
+            payroll.confirmed_by = request.user.employee
             payroll.save()
-            return Response()
+            return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST, data="Already confirmed")
 
     @atomic

@@ -53,6 +53,10 @@ class Employee(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee')
     current_job = models.ForeignKey(to='job.Job', on_delete=models.SET_NULL, null=True)
 
+    @property
+    def full_name(self):
+        return (self.first_name + " " + self.last_name).strip()
+
     def get_role(self):
         if self.user.is_superuser:
             return "superuser".upper()
