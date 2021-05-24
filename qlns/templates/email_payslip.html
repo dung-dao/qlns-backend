@@ -1,23 +1,53 @@
 <!doctype html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>{{title}}</title>
+<html lang="en" style="box-sizing: border-box;">
+
+<head style="box-sizing: border-box;">
+    <meta charset="UTF-8" style="box-sizing: border-box;">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" style="box-sizing: border-box;">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" style="box-sizing: border-box;">
+    <title style="box-sizing: border-box;">{{title}}</title>
+
+    <!-- CSS only -->
+
 </head>
-<body>
-<table style="border: 1px solid black; margin-left: auto; margin-right: auto;">
-    <tr style="color: white; background-color: green; padding: 1rem; font-size: 1.2em;">
-        <th colspan="2">{{title}}</th>
-    </tr>
-    {% for value in values %}
-    <tr>
-        <td style="font-size: 1rem; color: black; padding-left: 1rem; padding-right: 1rem;">{{value.name}}</td>
-        <td style="font-size: 1rem; color: black; padding-left: 1rem; padding-right: 1rem;">{{value.value}}</td>
-    </tr>
-    {% endfor %}
-</table>
+
+<body class="bg-light p-3" style="box-sizing: border-box;margin: 0;font-family: var(--bs-font-sans-serif);font-size: 1rem;font-weight: 400;line-height: 1.5;color: #212529;background-color: #f8f9fa!important;-webkit-text-size-adjust: 100%;-webkit-tap-highlight-color: transparent;padding: 1rem!important;">
+    <div class="container shadow p-3 mb-5 bg-body rounded" style="width: 60%;box-sizing: border-box;padding-right: var(--bs-gutter-x,.75rem);padding-left: var(--bs-gutter-x,.75rem);margin-right: auto;margin-left: auto;box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;margin-bottom: 3rem!important;padding: 1rem!important;background-color: #fff!important;border-radius: .25rem!important;">
+        <div class="row" style="box-sizing: border-box;--bs-gutter-x: 1.5rem;--bs-gutter-y: 0;display: flex;flex-wrap: wrap;margin-top: calc(var(--bs-gutter-y) * -1);margin-right: calc(var(--bs-gutter-x)/ -2);margin-left: calc(var(--bs-gutter-x)/ -2);">
+            <div class="col" style="box-sizing: border-box;flex-shrink: 0;width: 100%;max-width: 100%;padding-right: calc(var(--bs-gutter-x)/ 2);padding-left: calc(var(--bs-gutter-x)/ 2);margin-top: var(--bs-gutter-y);flex: 1 0 0%;">
+                <p class="fs-4" style="box-sizing: border-box;margin-top: 0;margin-bottom: 1rem;font-size: 1.5rem!important;">Thông báo</p>
+                <p style="box-sizing: border-box;margin-top: 0;margin-bottom: 1rem;">Đây là phiếu lương được gửi tự động từ HRM System cho chu kỳ lương {{cycle_start_date}} -
+                    {{cycle_end_date}}</p>
+            </div>
+        </div>
+        <div class="row" style="box-sizing: border-box;--bs-gutter-x: 1.5rem;--bs-gutter-y: 0;display: flex;flex-wrap: wrap;margin-top: calc(var(--bs-gutter-y) * -1);margin-right: calc(var(--bs-gutter-x)/ -2);margin-left: calc(var(--bs-gutter-x)/ -2);">
+            <div class="col" style="box-sizing: border-box;flex-shrink: 0;width: 100%;max-width: 100%;padding-right: calc(var(--bs-gutter-x)/ 2);padding-left: calc(var(--bs-gutter-x)/ 2);margin-top: var(--bs-gutter-y);flex: 1 0 0%;">
+                <table class="table table-bordered table-striped mt-3" style="margin-left: auto;margin-right: auto;box-sizing: border-box;caption-side: bottom;border-collapse: collapse;--bs-table-bg: transparent;--bs-table-accent-bg: transparent;--bs-table-striped-color: #212529;--bs-table-striped-bg: rgba(0, 0, 0, 0.05);--bs-table-active-color: #212529;--bs-table-active-bg: rgba(0, 0, 0, 0.1);--bs-table-hover-color: #212529;--bs-table-hover-bg: rgba(0, 0, 0, 0.075);width: 100%;margin-bottom: 1rem;color: #212529;vertical-align: top;border-color: #dee2e6;margin-top: 1rem!important;">
+                    <tr style="background-color: #198754!important;box-sizing: border-box;border-color: inherit;border-style: solid;border-width: 0;">
+                        <th colspan="2" style="box-sizing: border-box;text-align: -webkit-match-parent;border-color: inherit;border-style: solid;border-width: 1px 0;border-bottom-color: currentColor;">
+                            <p class="fs-5 text-center text-white mb-0" style="box-sizing: border-box;margin-top: 0;margin-bottom: 0!important;padding: .5rem .5rem;background-color: var(--bs-table-bg);border-bottom-width: 1px;box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);border-width: 0 1px;font-size: 1.25rem!important;text-align: center!important;color: #fff!important;">{{title}}</p>
+                        </th>
+                    </tr>
+                    {% for value in values %}
+                    <tr style="background-color: white;box-sizing: border-box;border-color: inherit;border-style: solid;border-width: 0;">
+                        <td style="padding-left: 1.2rem;padding-right: 3rem;padding-top: 0.5rem;padding-bottom: 0.5rem;box-sizing: border-box;border-color: inherit;border-style: solid;border-width: 1px 0;">
+                            {{value.name}}</td>
+                        <td style="padding-left: 1.2rem;padding-right: 3rem;padding-top: 0.5rem;padding-bottom: 0.5rem;box-sizing: border-box;border-color: inherit;border-style: solid;border-width: 1px 0;">
+                            {{value.value}}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        <div style="box-sizing: border-box;">
+            <p style="box-sizing: border-box;margin-top: 0;margin-bottom: 1rem;">Vui lòng kiểm tra lại thông tin. Mọi thắc mắc xin viu lòng liên hệ quản trị viên để được giải đáp.
+            </p>
+            <div style="box-sizing: border-box;">
+                <span style="box-sizing: border-box;">Website: </span>
+                <a href="#" style="box-sizing: border-box;color: #0d6efd;text-decoration: underline;">HRM Web</a>
+            </div>
+        </div>
+    </div>
 </body>
+
 </html>

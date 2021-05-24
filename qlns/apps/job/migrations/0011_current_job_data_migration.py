@@ -1,7 +1,7 @@
 from django.db import migrations
 
 
-def combine_names(apps, schema_editor):
+def set_current_job(apps, schema_editor):
     Employee = apps.get_model('core', 'Employee')
     for employee in Employee.objects.all():
         job = employee.job_history.order_by('-timestamp').first()
@@ -15,5 +15,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(combine_names)
+        migrations.RunPython(set_current_job)
     ]

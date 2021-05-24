@@ -11,11 +11,6 @@ class SalaryTemplateSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = SalaryTemplate
 
-    def validate(self, attrs):
-        fields = attrs.get('fields')
-
-        return attrs
-
     def create(self, validated_data):
         fields = validated_data.pop('fields')
 
@@ -41,4 +36,5 @@ class SalaryTemplateSerializer(serializers.ModelSerializer):
             field = SalaryTemplateField(**f)
             field.template = instance
             field.save()
+
         return instance
