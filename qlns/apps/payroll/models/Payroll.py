@@ -23,6 +23,7 @@ class Payroll(models.Model):
     period = models.ForeignKey(to='attendance.Period', on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=50, choices=Status.choices, default=Status.Temporary)
+    confirmed_by = models.ForeignKey(to='core.Employee', on_delete=models.SET_NULL, null=True)
 
     @staticmethod
     def get_employee_info(employee):

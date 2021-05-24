@@ -1,6 +1,7 @@
 from django.db import transaction
 from django.db.models import ProtectedError
 from django.db.transaction import atomic
+from django.shortcuts import get_object_or_404
 from rest_framework import permissions
 from rest_framework import status
 from rest_framework import viewsets, mixins
@@ -60,6 +61,25 @@ class SalaryTemplateView(
 
     def destroy(self, request, *args, **kwargs):
         try:
-            super(SalaryTemplateView, self).destroy(request, *args, **kwargs)
+            return super(SalaryTemplateView, self).destroy(request, *args, **kwargs)
         except ProtectedError:
             return Response(status=status.HTTP_400_BAD_REQUEST, data="Denied")
+
+    @atomic
+    @action(detail=True, methods=['post'])
+    def duplicate(self, request, pk=None):
+        template = get_object_or_404(SalaryTemplate, pk=pk)
+        fields = template.fields.all()
+
+        template.pk = None
+        template.is_default = False
+        template.name = (template.name + " (copy)").strip()
+        template.save()
+
+        for field in fields:
+            field.pk = None
+            field.template = template
+            field.save()
+
+        serializer = SalaryTemplateSerializer(instance=template)
+        return Response(data=serializer.data)

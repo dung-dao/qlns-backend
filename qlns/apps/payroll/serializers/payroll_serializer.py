@@ -16,6 +16,7 @@ class PayrollSerializer(serializers.ModelSerializer):
     )
 
     period = PeriodSerializer(read_only=True)
+    confirmed_by = serializers.SlugRelatedField('full_name', read_only=True)
 
     def create(self, validated_data):
         modified_validated_data = validated_data

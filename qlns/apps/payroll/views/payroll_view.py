@@ -9,7 +9,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -24,10 +24,9 @@ class PayrollView(
     viewsets.GenericViewSet,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
     mixins.RetrieveModelMixin,
 ):
-    # permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated,)
     serializer_class = PayrollSerializer
     queryset = Payroll.objects.all()
 
@@ -46,12 +45,24 @@ class PayrollView(
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+    def destroy(self, request, pk=None):
+        payroll = get_object_or_404(Payroll, pk=pk)
+
+        if payroll.status == Payroll.Status.Confirmed:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="Cannot delete confirmed payroll")
+        else:
+            payroll.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(detail=True, methods=['post'])
     def confirm(self, request, pk):
         payroll = get_object_or_404(Payroll, pk=pk)
-        payroll.status = Payroll.Status.Confirmed
-        payroll.save()
-        return Response()
+        if payroll.status != Payroll.Status.Confirmed:
+            payroll.status = Payroll.Status.Confirmed
+            payroll.confirmed_by = request.user.employee
+            payroll.save()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST, data="Already confirmed")
 
     @atomic
     @action(detail=True, methods=['post'])
