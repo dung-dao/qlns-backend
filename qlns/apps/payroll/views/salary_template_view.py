@@ -13,6 +13,11 @@ from qlns.apps.payroll.serializers.salary_template_field_serializer import Salar
 from qlns.apps.payroll.serializers.salary_template_serializer import SalaryTemplateSerializer
 
 
+class DuplicateSalaryTemplatePermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('payroll.add_salarytemplate')
+
+
 class SalaryTemplateView(
     viewsets.GenericViewSet,
     mixins.CreateModelMixin,
@@ -23,6 +28,17 @@ class SalaryTemplateView(
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = SalaryTemplateSerializer
     queryset = SalaryTemplate.objects.prefetch_related('fields').all()
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve', 'create', 'destroy', 'update']:
+            permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
+        elif self.action == 'get_system_fields':
+            permission_classes = ()
+        elif self.action == 'duplicate':
+            permission_classes = (DuplicateSalaryTemplatePermission,)
+        else:
+            raise Exception('Unreachable code')
+        return [permission() for permission in permission_classes]
 
     @action(detail=False, methods=['get'])
     def get_system_fields(self, request):

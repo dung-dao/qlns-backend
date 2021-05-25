@@ -9,8 +9,7 @@ from rest_framework import permissions
 class DepartmentView(viewsets.ModelViewSet):
     serializer_class = core_serializers.DepartmentSerializer
     queryset = core_models.Department.objects.all()
-
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
     def create(self, request, *args, **kwargs):
         try:
