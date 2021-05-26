@@ -2,6 +2,7 @@ from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.response import Response
 
+from qlns.apps.authentication.permissions import RWPermissionOrViewOwn
 from qlns.apps.core.models import Employee
 from qlns.apps.payroll.models import EmployeeSalary
 from qlns.apps.payroll.serializers.employee_salary_serializer import EmployeeSalarySerializer
@@ -9,6 +10,7 @@ from qlns.apps.payroll.serializers.employee_salary_serializer import EmployeeSal
 
 class EmployeeSalaryView(viewsets.ViewSet):
     serializer_class = EmployeeSalarySerializer
+    permission_classes = (RWPermissionOrViewOwn,)
 
     def get_queryset(self):
         return EmployeeSalary.objects.filter(owner=self.kwargs['employee_pk'])

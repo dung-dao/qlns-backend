@@ -1,14 +1,15 @@
+from rest_framework import status
 from rest_framework import viewsets
+from rest_framework.response import Response
 
+from qlns.apps.authentication.permissions import RWPermissionOrIsOwner
 from qlns.apps.core import models as core_models
 from qlns.apps.core import serializers as core_serializers
-
-from rest_framework.response import Response
-from rest_framework import status
 
 
 class EmergencyContactView(viewsets.ViewSet):
     serializer_class = core_serializers.EmergencyContactSerializer
+    permission_classes = (RWPermissionOrIsOwner,)
 
     def get_queryset(self):
         return core_models.EmergencyContact.objects.filter(owner=self.kwargs['employee_pk'])
@@ -23,7 +24,7 @@ class EmergencyContactView(viewsets.ViewSet):
 
     def create(self, request, employee_pk=None):
         info = self.get_queryset().first()
-        
+
         serializer = None
         if info is None:
             serializer = self.serializer_class(data=request.data)
@@ -35,7 +36,7 @@ class EmergencyContactView(viewsets.ViewSet):
             if str(request.data['owner']) != employee_pk:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
             serializer.save()
-            
+
             return Response(data=serializer.data)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)

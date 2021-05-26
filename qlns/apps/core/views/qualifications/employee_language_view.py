@@ -2,11 +2,13 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
 
+from qlns.apps.authentication.permissions import DjangoModelPermissionOrIsOwner
 from qlns.apps.core import models as core_models
 from qlns.apps.core.serializers import qualifications as qualification_serializers
 
 
 class EmployeeLanguageView(viewsets.ModelViewSet):
+    permission_classes = (DjangoModelPermissionOrIsOwner,)
     serializer_class = qualification_serializers.EmployeeLanguageSerializer
 
     def get_queryset(self):

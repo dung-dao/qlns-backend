@@ -3,10 +3,12 @@ from rest_framework.response import Response
 
 from qlns.apps.attendance.models import EmployeeSchedule
 from qlns.apps.attendance.serializers.employee_schedule import EmployeeScheduleSerializer
+from qlns.apps.authentication.permissions import RWPermissionOrViewOwn
 
 
 class EmployeeScheduleView(viewsets.ViewSet):
     serializer_class = EmployeeScheduleSerializer
+    permission_classes = (RWPermissionOrViewOwn,)
 
     def get_queryset(self):
         return EmployeeSchedule.objects.filter(owner=self.kwargs['employee_pk'])

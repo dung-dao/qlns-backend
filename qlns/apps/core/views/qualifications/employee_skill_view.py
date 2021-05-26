@@ -1,13 +1,15 @@
+from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.response import Response
-from rest_framework import status
 
+from qlns.apps.authentication.permissions import DjangoModelPermissionOrIsOwner
 from qlns.apps.core import models as core_models
 from qlns.apps.core.serializers import qualifications as qualification_serializers
 
 
 class EmployeeSkillView(viewsets.ModelViewSet):
     serializer_class = qualification_serializers.EmployeeSkillSerializer
+    permission_classes = (DjangoModelPermissionOrIsOwner,)
 
     def get_queryset(self):
         return core_models.EmployeeSkill.objects.filter(owner=self.kwargs['employee_pk'])
