@@ -2,16 +2,17 @@ from django.db.models import Q
 from django.db.transaction import atomic, set_rollback
 from django.shortcuts import get_object_or_404
 from geopy import distance
+from rest_framework import permissions
 from rest_framework import status
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from qlns.apps.attendance.models import Attendance, Tracking, TimeOff, Period
 from qlns.apps.attendance.serializers.attendance import AttendanceSerializer
 from qlns.apps.attendance.serializers.attendance.edit_actual_serializer import EditActualSerializer
 from qlns.apps.attendance.serializers.attendance.edit_overtime_serializer import EditOvertimeSerializer
+from qlns.apps.authentication.permissions import DjangoModelPermissionOrIsOwner, ActionPermission, IsOwner
 from qlns.apps.core.models import Employee
 from qlns.utils.constants import MIN_UTC_DATETIME, MAX_UTC_DATETIME
 from qlns.utils.datetime_utils import parse_iso_datetime, local_now
@@ -20,7 +21,17 @@ from qlns.utils.datetime_utils import parse_iso_datetime, local_now
 class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
     queryset = Attendance.objects.all()
     serializer_class = AttendanceSerializer
-    permission_classes = (IsAuthenticated,)
+
+    def get_permissions(self):
+        permission_classes = (permissions.IsAuthenticated,)
+        if self.action in ['list', ]:
+            permission_classes = (DjangoModelPermissionOrIsOwner,)
+        elif self.action in ['check_in', 'check_out', ]:
+            permission_classes = (IsOwner,)
+        elif self.action in ['revert', 'reject', 'approve', 'confirm',
+                             'edit_actual_hours', 'edit_overtime_hours']:
+            permission_classes = (ActionPermission,)
+        return [permission() for permission in permission_classes]
 
     def get_queryset(self):
         return self.queryset.filter(Q(owner=self.kwargs['employee_pk']))

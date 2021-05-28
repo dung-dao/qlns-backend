@@ -2,6 +2,13 @@ from django.db import models
 
 
 class TimeOff(models.Model):
+    class Meta:
+        default_permissions = ('view',)
+        permissions = (
+            ('can_reject_timeoff', 'Can reject time off'),
+            ('can_approve_timeoff', 'Can approve time off'),
+        )
+
     class TimeOffStatus(models.TextChoices):
         Pending = 'Pending'
         Canceled = 'Canceled'

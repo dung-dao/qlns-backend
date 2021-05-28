@@ -4,3 +4,4 @@ from .RWPermissionOrViewOwn import RWPermissionOrViewOwn
 from .RWPermissionOrReadonly import RWPermissionOrReadOnly
 from .ActionPermission import ActionPermission
 from .CRUDPermission import CRUDPermission
+from .IsOwner import IsOwner
