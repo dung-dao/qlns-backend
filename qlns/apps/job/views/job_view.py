@@ -6,6 +6,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from qlns.apps.authentication.permissions import CRUDPermission, DjangoModelPermissionOrIsOwner, ActionPermission
 from qlns.apps.core import models as core_models
 from qlns.apps.job import models as job_models
 from qlns.apps.job import serializers as job_serializer
@@ -19,8 +20,20 @@ class JobView(viewsets.GenericViewSet,
     serializer_class = job_serializer.JobSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
+    def get_permissions(self):
+        permission_classes = (permissions.IsAuthenticated,)
+        if self.action in ['create', 'destroy', ]:
+            permission_classes = (CRUDPermission,)
+        if self.action in ['list', 'retrieve']:
+            permission_classes = (DjangoModelPermissionOrIsOwner,)
+        elif self.action in ['terminate']:
+            permission_classes = (ActionPermission,)
+        return [permission() for permission in permission_classes]
+
     def get_queryset(self):
-        return job_models.Job.objects.filter(owner=self.kwargs['employee_pk']).order_by('-timestamp')
+        return job_models.Job.objects \
+            .filter(owner=self.kwargs['employee_pk']) \
+            .order_by('-timestamp')
 
     @atomic
     def create(self, request, *args, **kwargs):
@@ -38,7 +51,7 @@ class JobView(viewsets.GenericViewSet,
 
     @atomic
     @action(detail=False, methods=['post'])
-    def terminate_employment(self, request, *args, **kwargs):
+    def terminate(self, request, *args, **kwargs):
         employee = get_object_or_404(core_models.Employee, pk=self.kwargs['employee_pk'])
         # TODO: Check employee employment
         if not employee.is_working():
