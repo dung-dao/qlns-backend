@@ -2,3 +2,5 @@ from .DjangoModelPermissionOrIsOwner import DjangoModelPermissionOrIsOwner
 from .RWPermissionOrIsOwner import RWPermissionOrIsOwner
 from .RWPermissionOrViewOwn import RWPermissionOrViewOwn
 from .RWPermissionOrReadonly import RWPermissionOrReadOnly
+from .ActionPermission import ActionPermission
+from .CRUDPermission import CRUDPermission
