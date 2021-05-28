@@ -14,6 +14,15 @@ from qlns.utils.datetime_utils import to_date_string
 
 
 class Payroll(models.Model):
+    class Meta:
+        default_permissions = ('view', 'delete', 'add')
+        permissions = (
+            ('can_calculate_payroll', 'Can calculate payroll'),
+            ('can_export_excel_payroll', 'Can export payroll to excel file'),
+            ('can_send_payslip_payroll', 'Can send payslip'),
+            ('can_confirm_payroll', 'Can confirm payroll'),
+        )
+
     class Status(models.TextChoices):
         Temporary = 'Temporary'
         Confirmed = 'Confirmed'

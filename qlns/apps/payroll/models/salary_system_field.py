@@ -2,6 +2,9 @@ from django.db import models
 
 
 class SalarySystemField(models.Model):
+    class Meta:
+        default_permissions = ('change',)
+
     class Datatype(models.TextChoices):
         Number = 'Number'
         Currency = 'Currency'
