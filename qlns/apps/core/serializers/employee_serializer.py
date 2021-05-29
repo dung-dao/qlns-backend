@@ -22,7 +22,6 @@ class EmployeeSerializer(serializers.ModelSerializer):
         user_data = validated_data.pop('user')
         user = User(
             username=user_data['username'],
-            is_staff=user_data['is_staff'],
             is_superuser=False,
         )
 
