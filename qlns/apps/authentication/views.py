@@ -25,7 +25,6 @@ class PermissionView(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return Permission.objects.raw(self.all_perm_str_query)
 
-    permission_classes = (IsAuthenticated,)
     queryset = Permission.objects.all()
     serializer_class = PermissionSerializer
 
