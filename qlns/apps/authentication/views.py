@@ -17,6 +17,14 @@ class GroupView(viewsets.ModelViewSet):
 
 
 class PermissionView(viewsets.ReadOnlyModelViewSet):
+    all_perm_str_query = "SELECT DISTINCT perm.* FROM auth_permission perm LEFT JOIN qlns.django_content_type " \
+                         "ctt ON perm.content_type_id = ctt.id WHERE NOT ctt.app_label='admin' AND NOT " \
+                         "ctt.app_label='sessions' AND NOT ctt.app_label='contenttypes' AND NOT ctt.app_label='admin' " \
+                         "ORDER BY perm.id "
+
+    def get_queryset(self):
+        return Permission.objects.raw(self.all_perm_str_query)
+
     permission_classes = (IsAuthenticated,)
     queryset = Permission.objects.all()
     serializer_class = PermissionSerializer
@@ -27,7 +35,8 @@ class AuthenticatedPermissionView(views.APIView):
 
     all_perm_str_query = "SELECT DISTINCT perm.* FROM auth_permission perm LEFT JOIN qlns.django_content_type " \
                          "ctt ON perm.content_type_id = ctt.id WHERE NOT ctt.app_label='admin' AND NOT " \
-                         "ctt.app_label='sessions' AND NOT ctt.app_label='contenttypes' ORDER BY perm.id "
+                         "ctt.app_label='sessions' AND NOT ctt.app_label='contenttypes' AND NOT ctt.app_label='admin' " \
+                         "ORDER BY perm.id "
 
     def get(self, request, format=None):
         all_permissions = Permission.objects.raw(self.all_perm_str_query)
