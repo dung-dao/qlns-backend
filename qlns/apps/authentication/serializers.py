@@ -1,6 +1,6 @@
-from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import serializers
 from django.contrib.auth.models import Group, Permission, User
+from django.db.transaction import atomic
+from rest_framework import serializers
 
 
 class PermissionSerializer(serializers.ModelSerializer):
@@ -9,25 +9,61 @@ class PermissionSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'codename']
 
 
+class PermissionStatusSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    codename = serializers.CharField()
+    has_perm = serializers.BooleanField()
+
+    def update(self, instance, validated_data):
+        raise Exception('Cannot use PermissionStatusSerializer for updating data')
+
+    def create(self, validated_data):
+        raise Exception('Cannot use PermissionStatusSerializer for creating object')
+
+
 class GroupSerializer(serializers.ModelSerializer):
-    permissions = PermissionSerializer(many=True)
+    permissions = PermissionStatusSerializer(many=True)
+
+    all_perm_str_query = "SELECT DISTINCT perm.* FROM auth_permission perm LEFT JOIN qlns.django_content_type " \
+                         "ctt ON perm.content_type_id = ctt.id WHERE NOT ctt.app_label='admin' AND NOT " \
+                         "ctt.app_label='sessions' AND NOT ctt.app_label='contenttypes' ORDER BY perm.id "
+
+    def get_all_perms(self):
+        return Permission.objects.raw(self.all_perm_str_query)
+
+    def to_representation(self, instance):
+        all_permissions = list(self.get_all_perms())
+        permissions = list(instance.permissions.all())
+
+        def map_permission_to_perm_status(perm):
+            return {'id': perm.id,
+                    'name': perm.name,
+                    'codename': perm.codename,
+                    'has_perm': perm in permissions}
+
+        permission_statuses = list(map(map_permission_to_perm_status, all_permissions))
+        return {
+            'id': instance.id,
+            'name': instance.name,
+            'permissions': permission_statuses
+        }
 
     class Meta:
         model = Group
         fields = ['id', 'name', 'permissions']
 
+    @atomic
     def create(self, validated_data):
         newgroup = Group(name=validated_data['name'])
         newgroup.save()
 
+        all_perms = self.get_all_perms()
         permission_data = validated_data.pop('permissions')
-        permissions = []
-        for per in permission_data:
-            try:
-                permission = Permission.objects.get(**per)
-                permissions.append(permission)
-            except ObjectDoesNotExist:
-                continue
+        enable_perms = list(filter(lambda e: e['has_perm'], permission_data))
+        permission_code_names = list(map(lambda e: e['codename'], enable_perms))
+        permissions = list(filter(lambda perm: perm.codename in permission_code_names, all_perms))
+
         if len(permissions) > 0:
             newgroup.permissions.set(permissions)
             newgroup.save()
@@ -37,15 +73,12 @@ class GroupSerializer(serializers.ModelSerializer):
         if instance.name is not None:
             instance.name = validated_data.get('name', instance)
 
+        all_perms = self.get_all_perms()
         permission_data = validated_data.pop('permissions')
+        enable_perms = list(filter(lambda e: e['has_perm'], permission_data))
+        permission_code_names = list(map(lambda e: e['codename'], enable_perms))
+        permissions = list(filter(lambda perm: perm.codename in permission_code_names, all_perms))
 
-        permissions = []
-        for per in permission_data:
-            try:
-                permission = Permission.objects.get(**per)
-                permissions.append(permission)
-            except ObjectDoesNotExist:
-                continue
         if len(permissions) > 0:
             instance.permissions.set(permissions)
 
@@ -57,7 +90,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'password', 'is_staff', 'date_joined', 'is_active']
-        read_only_fields = ['date_joined', 'id', 'is_active']
+        read_only_fields = ['date_joined', 'id', 'is_active', 'is_staff']
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):

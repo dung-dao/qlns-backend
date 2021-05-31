@@ -1,6 +1,7 @@
 from django.db.models import Q
 from rest_framework import status
 from rest_framework import viewsets, mixins
+from rest_framework.permissions import DjangoModelPermissionsOrAnonReadOnly
 from rest_framework.response import Response
 
 from qlns.apps.attendance.models import Holiday
@@ -16,6 +17,7 @@ class HolidayView(
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin
 ):
+    permission_classes = (DjangoModelPermissionsOrAnonReadOnly,)
     serializer_class = HolidaySerializer
     queryset = Holiday.objects.all()
 

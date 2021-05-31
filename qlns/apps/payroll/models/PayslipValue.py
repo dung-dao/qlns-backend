@@ -2,6 +2,9 @@ from django.db import models
 
 
 class PayslipValue(models.Model):
+    class Meta:
+        default_permissions = ()
+
     payslip = models.ForeignKey(to='Payslip', on_delete=models.CASCADE, related_name='values')
     field = models.ForeignKey(to='SalaryTemplateField', on_delete=models.CASCADE)
 

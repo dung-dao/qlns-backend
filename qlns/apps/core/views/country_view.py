@@ -5,6 +5,6 @@ from qlns.apps.core.serializers import CountrySerializer
 
 
 class CountryView(viewsets.ModelViewSet):
-    permission_classes = (permissions.DjangoModelPermissions,)
+    permission_classes = (permissions.DjangoModelPermissionsOrAnonReadOnly,)
     queryset = Country.objects.all()
     serializer_class = CountrySerializer

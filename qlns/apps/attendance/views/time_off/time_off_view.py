@@ -1,6 +1,8 @@
 from rest_framework import serializers
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import status
 
 from qlns.apps.attendance.models import TimeOff
 from qlns.apps.core.models import Employee
@@ -26,7 +28,16 @@ class TimeOffListItemSerializer(serializers.ModelSerializer):
 
 
 class TimeOffView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    un_authorized = {
+        "detail": "You do not have permission to perform this action."
+    }
+
     def get(self, request):
+        if not request.user.has_perm('attendance.view_attendance'):
+            return Response(status=status.HTTP_403_FORBIDDEN, data=self.un_authorized)
+
         params = self.request.query_params
         start_date = parse_iso_datetime(params.get('from_date', None), MIN_UTC_DATETIME)
         end_date = parse_iso_datetime(params.get('to_date', None), MAX_UTC_DATETIME)

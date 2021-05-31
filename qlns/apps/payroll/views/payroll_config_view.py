@@ -1,18 +1,20 @@
-from rest_framework import viewsets, mixins
-from rest_framework.response import Response
 from rest_framework import status
-from rest_framework import permissions
+from rest_framework import viewsets
+from rest_framework.response import Response
 
+from qlns.apps.authentication.permissions import RWPermissionOrReadOnly
 from qlns.apps.payroll.models import PayrollConfig
 from qlns.apps.payroll.serializers import PayrollConfigSerializer
 
 
 class PayrollConfigView(viewsets.ViewSet):
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (RWPermissionOrReadOnly,)
     serializer_class = PayrollConfigSerializer
 
+    queryset = PayrollConfig.objects.all()
+
     def get_config(self):
-        return PayrollConfig.objects.first()
+        return self.queryset.first()
 
     def list(self, request):
         serializer = PayrollConfigSerializer(instance=self.get_config())

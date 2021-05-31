@@ -1,14 +1,15 @@
 from django.db.models import Q
 from django.db.transaction import atomic, set_rollback
 from django.shortcuts import get_object_or_404
+from rest_framework import permissions
 from rest_framework import status
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from qlns.apps.attendance.models import TimeOff, Holiday
 from qlns.apps.attendance.serializers import TimeOffSerializer
+from qlns.apps.authentication.permissions import DjangoModelPermissionOrIsOwner, IsOwner, ActionPermission
 from qlns.apps.core.models import Employee
 
 
@@ -18,9 +19,18 @@ class EmployeeTimeOffView(
     mixins.RetrieveModelMixin,
     mixins.CreateModelMixin
 ):
-    permission_classes = (IsAuthenticated,)
     queryset = TimeOff.objects.all()
     serializer_class = TimeOffSerializer
+
+    def get_permissions(self):
+        permission_classes = (permissions.IsAuthenticated,)
+        if self.action in ('list',):
+            permission_classes = (DjangoModelPermissionOrIsOwner,)
+        elif self.action in ('cancel', 'create',):
+            permission_classes = (IsOwner,)
+        elif self.action in ('reject', 'approve',):
+            permission_classes = (ActionPermission,)
+        return [permission() for permission in permission_classes]
 
     def get_queryset(self):
         return self.queryset.filter(owner=self.kwargs['employee_pk'])

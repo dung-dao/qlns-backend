@@ -4,6 +4,17 @@ from qlns.apps.attendance import models as attendance_models
 
 
 class Attendance(models.Model):
+    class Meta:
+        default_permissions = ('view',)
+        permissions = (
+            ('can_revert_attendance', 'Can revert employee attendance'),
+            ('can_reject_attendance', 'Can reject employee attendance'),
+            ('can_approve_attendance', 'Can approve employee attendance'),
+            ('can_confirm_attendance', 'Can confirm employee attendance'),
+            ('can_edit_actual_hours_attendance', 'Can edit actual hours of an employee attendance'),
+            ('can_edit_overtime_hours_attendance', 'Can edit overtime hours of an employee attendance'),
+        )
+
     class AttendanceLogStatus(models.TextChoices):
         Pending = 'Pending'
         Approved = 'Approved'

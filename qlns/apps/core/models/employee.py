@@ -13,6 +13,13 @@ def upload_to(instance, filename):
 
 
 class Employee(models.Model):
+    class Meta:
+        default_permissions = ('add', 'change', 'view')
+        permissions = (
+            ('can_set_role_employee', 'Can change employee role'),
+            ('can_set_password_employee', 'Can change employee password'),
+        )
+
     def __str__(self):
         return (self.first_name + " " + self.last_name).strip()
 

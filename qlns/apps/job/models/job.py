@@ -2,6 +2,12 @@ from django.db import models
 
 
 class Job(models.Model):
+    class Meta:
+        default_permissions = ('add', 'delete', 'view')
+        permissions = (
+            ('can_terminate_job', 'Can terminate employment'),
+        )
+
     class JobEvent(models.TextChoices):
         Error_Correction = 'Error Correction'
         Joined = 'Joined'

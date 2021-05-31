@@ -15,6 +15,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from qlns.apps.attendance.models import Period
+from qlns.apps.authentication.permissions import ActionPermission
 from qlns.apps.payroll.models import Payroll
 from qlns.apps.payroll.serializers.payroll_serializer import PayrollSerializer
 from qlns.utils.datetime_utils import to_date_string
@@ -26,9 +27,16 @@ class PayrollView(
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
 ):
-    permission_classes = (permissions.IsAuthenticated,)
     serializer_class = PayrollSerializer
     queryset = Payroll.objects.all()
+
+    def get_permissions(self):
+        permission_classes = (permissions.IsAuthenticated,)
+        if self.action in ('list', 'create', 'destroy'):
+            permission_classes = (permissions.DjangoModelPermissions,)
+        elif self.action in ('calculate', 'export_excel', 'send_payslip', 'confirm',):
+            permission_classes = (ActionPermission,)
+        return [permission() for permission in permission_classes]
 
     def create(self, request, *args, **kwargs):
         ctx = {"request": request, "period": request.data.get('period', None)}

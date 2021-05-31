@@ -2,6 +2,9 @@ from django.db import models
 
 
 class SalaryTemplateField(models.Model):
+    class Meta:
+        default_permissions = ()
+
     class Datatype(models.TextChoices):
         Number = 'Number'
         Currency = 'Currency'

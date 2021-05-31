@@ -1,12 +1,14 @@
+from django.contrib.auth.models import Group
+from django.shortcuts import get_object_or_404
+from rest_framework import permissions
+from rest_framework import status
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
+from qlns.apps.authentication.permissions import CRUDPermission
 from qlns.apps.core.models import Employee
 from qlns.apps.core.serializers import EmployeeSerializer
-from django.shortcuts import get_object_or_404
-from django.contrib.auth.models import Group
-from rest_framework import permissions
-from rest_framework import status
 
 
 class EmployeeView(viewsets.GenericViewSet,
@@ -16,21 +18,53 @@ class EmployeeView(viewsets.GenericViewSet,
                    mixins.UpdateModelMixin):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            # Insert permission here
-            permission_classes = (permissions.IsAuthenticated,)
-        elif self.action == 'create':
-            permission_classes = (permissions.IsAuthenticated,)
-        elif self.action == 'set_password':
-            permission_classes = (permissions.IsAuthenticated,)
-        else:
-            permission_classes = (permissions.IsAuthenticated,)
+        permission_classes = (permissions.IsAuthenticated,)
+        if self.action in ['list', 'create', 'update', ]:
+            permission_classes = (CRUDPermission,)
+
         return [permission() for permission in permission_classes]
 
-    @action(methods=['post'], detail=True, url_path='role', permission_classes=())
+    def get_action_perm(self):
+        app_label = self.serializer_class.Meta.model._meta.app_label
+        model = self.serializer_class.Meta.model._meta.model_name
+        perm = f'{app_label}.can_{self.action}_{model}'.lower()
+        return perm
+
+    un_authorized = {
+        "detail": "You do not have permission to perform this action."
+    }
+
+    def retrieve(self, request, *args, **kwargs):
+        pk = kwargs.get('pk', None)
+        if str(request.user.employee.pk) != pk and \
+                not request.user.has_perm('core.view_employee'):
+            return Response(status=status.HTTP_403_FORBIDDEN, data=self.un_authorized)
+        return super(EmployeeView, self).retrieve(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        pk = kwargs.get('pk', None)
+        if str(request.user.employee.pk) != pk and \
+                not request.user.has_perm('core.change_employee'):
+            return Response(status=status.HTTP_403_FORBIDDEN, data=self.un_authorized)
+        return super(EmployeeView, self).partial_update(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        pk = kwargs.get('pk', None)
+        if str(request.user.employee.pk) != pk and \
+                not request.user.has_perm('core.change_employee'):
+            return Response(status=status.HTTP_403_FORBIDDEN, data=self.un_authorized)
+        return super(EmployeeView, self).update(request, *args, **kwargs)
+
+    @action(methods=['post'], detail=True, url_path='role')
     def set_role(self, request, pk=None):
+        # Authorize
+        perm = self.get_action_perm()
+        if not request.user.has_perm(perm):
+            return Response(status=status.HTTP_403_FORBIDDEN, data=self.un_authorized)
+
         employee = get_object_or_404(Employee, pk=pk)
         group = get_object_or_404(Group, name=request.data['name'])
         employee.user.groups.set([group])
@@ -39,6 +73,12 @@ class EmployeeView(viewsets.GenericViewSet,
 
     @action(methods=['put'], detail=True, url_path='password')
     def set_password(self, request, pk):
+        # Authorize
+        perm = self.get_action_perm()
+        if not request.user.has_perm(perm) and \
+                not str(request.user.employee.pk) == pk:
+            return Response(status=status.HTTP_403_FORBIDDEN, data=self.un_authorized)
+
         if 'new_password' not in request.data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         employee = get_object_or_404(Employee, pk=pk)
@@ -49,6 +89,9 @@ class EmployeeView(viewsets.GenericViewSet,
 
     @action(methods=['post'], detail=True, url_path='avatar')
     def change_avatar(self, request, pk):
+        if str(request.user.employee.pk) != pk:
+            return Response(status=status.HTTP_403_FORBIDDEN, data=self.un_authorized)
+
         if 'avatar' not in request.data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         employee = get_object_or_404(Employee, pk=pk)
