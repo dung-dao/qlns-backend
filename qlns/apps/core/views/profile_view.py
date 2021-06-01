@@ -61,6 +61,8 @@ class ChangeAvatarView(views.APIView):
         if employee is not None:
             employee.avatar = request.data['avatar']
             employee.save()
+
+            employee.update_face_model()
             return Response()
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST, data="No Employee")

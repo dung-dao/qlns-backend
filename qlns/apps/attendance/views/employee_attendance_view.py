@@ -13,7 +13,7 @@ from qlns.apps.attendance.serializers.attendance import AttendanceSerializer
 from qlns.apps.attendance.serializers.attendance.edit_actual_serializer import EditActualSerializer
 from qlns.apps.attendance.serializers.attendance.edit_overtime_serializer import EditOvertimeSerializer
 from qlns.apps.authentication.permissions import DjangoModelPermissionOrIsOwner, ActionPermission, IsOwner
-from qlns.apps.core.models import Employee
+from qlns.apps.core.models import Employee, ApplicationConfig
 from qlns.utils.constants import MIN_UTC_DATETIME, MAX_UTC_DATETIME
 from qlns.utils.datetime_utils import parse_iso_datetime, local_now
 
@@ -49,8 +49,8 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
                     Q(date__lte=end_date))
         if period_id is not None:
             attendance_data = attendance_data.filter(period=period_id)
-
-        return Response(data=AttendanceSerializer(attendance_data, many=True).data)
+        serializer = AttendanceSerializer(attendance_data, many=True, context={'request': request})
+        return Response(data=serializer.data)
 
     @atomic
     @action(detail=False, methods=['post'])
@@ -64,10 +64,24 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
 
         today = local_now()
         period = Period.get_or_create(today)
-
         locale_today_start = today.replace(hour=0, minute=0, second=0, microsecond=0)
-
         locale_today_end = today.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+        check_in_note = request.data.get('check_in_note', None)
+
+        # Face recognition
+        app_config = ApplicationConfig.objects.first()
+        require_face_id = getattr(app_config, 'require_face_id', False)
+        face_img = request.data.get('face_image', None)
+        face_authorized = None
+
+        if face_img is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data='face_image required')
+
+        if require_face_id:
+            face_authorized = employee.identify_image(face_img.file)
+            if not face_authorized and check_in_note is None:
+                return Response(status=status.HTTP_401_UNAUTHORIZED, data='Face recognition failed')
 
         # Check if overlapped with an approved time off
         time_off_overlapped = TimeOff.objects.filter(
@@ -113,7 +127,6 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
 
         check_in_lat = request.data.get('check_in_lat', None)
         check_in_lng = request.data.get('check_in_lng', None)
-        check_in_note = request.data.get('check_in_note', None)
 
         check_in_outside = None
 
@@ -144,7 +157,10 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
             check_in_outside=check_in_outside,
 
             check_in_note=request.data.get('check_in_note', None),
-            location=location
+            location=location,
+
+            check_in_image=face_img,
+            check_in_face_authorized=face_authorized,
         )
 
         tracking.save()
@@ -158,10 +174,9 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
 
         # Get today attendance
         today = local_now()
-
         locale_today_start = today.replace(hour=0, minute=0, second=0, microsecond=0)
-
         locale_today_end = today.replace(hour=23, minute=59, second=59, microsecond=999999)
+        check_out_note = request.data.get('check_out_note', None)
 
         attendance = Attendance.objects \
             .filter(Q(date__gte=locale_today_start) &
@@ -178,10 +193,23 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         if tracking is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        # Face recognition
+        app_config = ApplicationConfig.objects.first()
+        require_face_id = getattr(app_config, 'require_face_id', False)
+        face_img = request.data.get('face_image', None)
+        face_authorized = None
+
+        if face_img is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data='face_image required')
+
+        if require_face_id:
+            face_authorized = employee.identify_image(face_img.file)
+            if not face_authorized and check_out_note is None:
+                return Response(status=status.HTTP_401_UNAUTHORIZED, data='Face recognition failed')
+
         # CHECK OUT OUTSIDE
         check_out_lat = request.data.get('check_out_lat', None)
         check_out_lng = request.data.get('check_out_lng', None)
-        check_out_note = request.data.get('check_out_note', tracking.check_out_note)
 
         check_out_outside = None
 
@@ -211,6 +239,8 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         tracking.check_out_lng = check_out_lng
         tracking.check_out_note = check_out_note
         tracking.check_out_outside = check_out_outside
+        tracking.check_out_image = face_img
+        tracking.check_out_face_authorized = face_authorized
 
         tracking.save()
 
