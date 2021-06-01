@@ -71,14 +71,17 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
 
         # Face recognition
         app_config = ApplicationConfig.objects.first()
-        require_face_id = getattr(app_config, 'require_face_id', False)
+        face_id_required = getattr(app_config, 'face_id_required', False)
         face_img = request.data.get('face_image', None)
         face_authorized = None
+
+        if face_id_required and employee.face_model_path is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data='Face identity not available')
 
         if face_img is None:
             return Response(status=status.HTTP_400_BAD_REQUEST, data='face_image required')
 
-        if require_face_id:
+        if face_id_required:
             face_authorized = employee.identify_image(face_img.file)
             if not face_authorized and check_in_note is None:
                 return Response(status=status.HTTP_401_UNAUTHORIZED, data='Face recognition failed')
