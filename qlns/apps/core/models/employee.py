@@ -1,6 +1,8 @@
 import os
+import pickle
 import uuid
 
+import face_recognition
 from django.contrib.auth.models import User
 from django.db import models
 
@@ -18,6 +20,7 @@ class Employee(models.Model):
         permissions = (
             ('can_set_role_employee', 'Can change employee role'),
             ('can_set_password_employee', 'Can change employee password'),
+            ('can_change_avatar_employee', 'Can change employee avatar (also use for face identity)'),
         )
 
     def __str__(self):
@@ -55,6 +58,8 @@ class Employee(models.Model):
 
     avatar = models.ImageField(
         upload_to=upload_to, default='avatars/default_avatar.svg')
+
+    face_model_path = models.CharField(max_length=1000, null=True)
 
     # related data
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee')
@@ -106,3 +111,33 @@ class Employee(models.Model):
                 return "Working"
         elif self.current_job is None:
             return "NewHired"
+
+    def identify_image(self, image):
+        if self.face_model_path is None:
+            return False
+
+        pic = face_recognition.load_image_file(image)
+        faces = face_recognition.face_locations(pic)
+
+        if len(faces) != 1:
+            return False
+        unknown_face_enc = face_recognition.face_encodings(pic)[0]
+        employee_face_enc = pickle.load(open(self.face_model_path, 'rb'))
+        return face_recognition.compare_faces([employee_face_enc], unknown_face_enc, tolerance=0.4)[0]
+
+    def update_face_model(self):
+        if self.avatar == self.avatar.field.default:
+            return
+
+        img_path = self.avatar.path
+        face_img = face_recognition.load_image_file(img_path)
+        faces = face_recognition.face_locations(face_img)
+        if len(faces) != 1:
+            return
+
+        face_enc = face_recognition.face_encodings(face_img)[0]
+        filename = self.face_model_path if self.face_model_path is not None \
+            else './private_files/trained_models/' + str(uuid.uuid4()) + '.sav'
+        pickle.dump(face_enc, open(filename, 'wb'))
+        self.face_model_path = filename
+        self.save()

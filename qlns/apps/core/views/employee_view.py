@@ -1,4 +1,5 @@
 from django.contrib.auth.models import Group
+from django.db.transaction import atomic
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions
 from rest_framework import status
@@ -87,9 +88,11 @@ class EmployeeView(viewsets.GenericViewSet,
         employee.user.save()
         return Response()
 
+    @atomic
     @action(methods=['post'], detail=True, url_path='avatar')
     def change_avatar(self, request, pk):
-        if str(request.user.employee.pk) != pk:
+        perm = self.get_action_perm()
+        if not request.user.has_perm(perm):
             return Response(status=status.HTTP_403_FORBIDDEN, data=self.un_authorized)
 
         if 'avatar' not in request.data:
@@ -97,4 +100,7 @@ class EmployeeView(viewsets.GenericViewSet,
         employee = get_object_or_404(Employee, pk=pk)
         employee.avatar = request.data['avatar']
         employee.save()
+
+        employee.update_face_model()
+
         return Response()

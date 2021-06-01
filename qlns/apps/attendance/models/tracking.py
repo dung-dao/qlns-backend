@@ -1,4 +1,12 @@
+import os
+import uuid
+
 from django.db import models
+
+
+def upload_to(instance, filename):
+    _, file_extension = os.path.splitext('/' + filename)
+    return 'attendance_faces/' + str(uuid.uuid4()) + file_extension
 
 
 class Tracking(models.Model):
@@ -22,6 +30,12 @@ class Tracking(models.Model):
 
     actual_work_hours = models.FloatField(default=0)
     ot_work_hours = models.FloatField(default=0)
+
+    check_in_image = models.ImageField(upload_to=upload_to, null=True)
+    check_in_face_authorized = models.BooleanField(null=True)
+
+    check_out_image = models.ImageField(upload_to=upload_to, null=True)
+    check_out_face_authorized = models.BooleanField(null=True)
 
     def calc_work_hours(self):
         if self.check_out_time is None:
