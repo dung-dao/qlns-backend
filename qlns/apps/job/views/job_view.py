@@ -10,6 +10,7 @@ from qlns.apps.authentication.permissions import CRUDPermission, DjangoModelPerm
 from qlns.apps.core import models as core_models
 from qlns.apps.job import models as job_models
 from qlns.apps.job import serializers as job_serializer
+from django_q.models import Schedule as Q_Schedule
 
 
 class JobView(viewsets.GenericViewSet,
@@ -75,5 +76,13 @@ class JobView(viewsets.GenericViewSet,
 
         employee.current_job = job
         employee.save()
+
+        Q_Schedule.objects.create(
+            func="qlns.apps.job.tasks.deactivate_employee",
+            kwargs={"employee_id": employee.pk},
+            name=f"Deactive_Employee_{employee.pk}",
+            schedule_type=Q_Schedule.ONCE,
+            next_run=job.termination.date,
+        )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
