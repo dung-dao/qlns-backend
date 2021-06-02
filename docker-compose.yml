@@ -26,3 +26,14 @@ services:
       - db
     links:
       - db
+  djangoq:
+    build: .
+    command: python manage.py qcluster
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+    links:
+      - db
