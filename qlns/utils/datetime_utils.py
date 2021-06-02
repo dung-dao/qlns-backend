@@ -33,3 +33,14 @@ def to_date_string(dt):
         return dt.strftime('%d/%m/%Y')
     local_date = timezone.localtime(dt)
     return local_date.strftime('%d/%m/%Y')
+
+
+CRON_WEEKDAYS = {'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6, 'Sun': 0, }
+PY_WEEKDAYS = {'Mon': 0, 'Tue': 1, 'Wed': 2, 'Thu': 3, 'Fri': 4, 'Sat': 5, 'Sun': 6, }
+
+
+def to_cron_weekday(py_weekday):
+    if py_weekday < 6:
+        return py_weekday + 1
+    else:
+        return 0

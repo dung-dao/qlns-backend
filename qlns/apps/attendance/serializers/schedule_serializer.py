@@ -1,8 +1,13 @@
+from datetime import timedelta
+
 from django.db.transaction import atomic
+from django_q.models import Schedule as Q_Schedule
 from rest_framework import serializers
 
 from qlns.apps.attendance.models import Schedule, WorkDay
 from qlns.apps.attendance.serializers.workday_serializer import WorkdaySerializer
+from qlns.apps.core.models import ApplicationConfig
+from qlns.utils.datetime_utils import CRON_WEEKDAYS, PY_WEEKDAYS, to_cron_weekday
 
 
 class ScheduleSerializer(serializers.ModelSerializer):
@@ -60,4 +65,62 @@ class ScheduleSerializer(serializers.ModelSerializer):
             workday.save()
 
         instance.update_duration()
+
+        # Delete all schedule
+        q_schedule_name = 'CheckOutSchedule_' + instance.name
+        config = ApplicationConfig.objects.first()
+        early_check_in_minutes = config.early_check_in_minutes
+        Q_Schedule.objects.filter(name=q_schedule_name).delete()
+
+        # Shift-end check out
+        for wd in instance.workdays.all():
+            cron_weekday = CRON_WEEKDAYS[wd.day]
+
+            if wd.morning_from is not None:
+                morning_from = wd.morning_from
+                while morning_from.weekday() != PY_WEEKDAYS[wd.day]:
+                    morning_from += timedelta(days=1)
+                early_morning = morning_from - timedelta(minutes=early_check_in_minutes)
+
+                Q_Schedule.objects.create(
+                    name=q_schedule_name,
+                    func='qlns.apps.attendance.tasks.auto_checkout',
+                    schedule_type=Q_Schedule.CRON,
+                    cron=f'{early_morning.minute} {early_morning.hour} * * {to_cron_weekday(early_morning.weekday())}'
+                )
+
+                morning_to = wd.morning_to
+                while morning_to.weekday() != PY_WEEKDAYS[wd.day]:
+                    morning_to += timedelta(days=1)
+
+                Q_Schedule.objects.create(
+                    name=q_schedule_name,
+                    func='qlns.apps.attendance.tasks.auto_checkout',
+                    schedule_type=Q_Schedule.CRON,
+                    cron=f'{morning_to.minute} {morning_to.hour} * * {to_cron_weekday(morning_to.weekday())}'
+                )
+
+            if wd.afternoon_from is not None:
+                afternoon_from = wd.afternoon_from
+                while afternoon_from.weekday() != PY_WEEKDAYS[wd.day]:
+                    afternoon_from += timedelta(days=1)
+                early_afternoon = afternoon_from - timedelta(minutes=early_check_in_minutes)
+                Q_Schedule.objects.create(
+                    name=q_schedule_name,
+                    func='qlns.apps.attendance.tasks.auto_checkout',
+                    schedule_type=Q_Schedule.CRON,
+                    cron=f'{early_afternoon.minute} {early_afternoon.hour} * * {to_cron_weekday(early_afternoon.weekday())}'
+                )
+
+                afternoon_to = wd.afternoon_to
+                while afternoon_to.weekday() != PY_WEEKDAYS[wd.day]:
+                    afternoon_to += timedelta(days=1)
+
+                Q_Schedule.objects.create(
+                    name=q_schedule_name,
+                    func='qlns.apps.attendance.tasks.auto_checkout',
+                    schedule_type=Q_Schedule.CRON,
+                    cron=f'{afternoon_to.minute} {afternoon_to.hour} * * {to_cron_weekday(afternoon_to.weekday())}'
+                )
+
         return instance
