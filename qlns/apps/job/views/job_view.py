@@ -1,5 +1,6 @@
 from django.db.transaction import atomic
 from django.shortcuts import get_object_or_404
+from django_q.models import Schedule as Q_Schedule
 from rest_framework import permissions
 from rest_framework import status
 from rest_framework import viewsets, mixins
@@ -10,7 +11,6 @@ from qlns.apps.authentication.permissions import CRUDPermission, DjangoModelPerm
 from qlns.apps.core import models as core_models
 from qlns.apps.job import models as job_models
 from qlns.apps.job import serializers as job_serializer
-from django_q.models import Schedule as Q_Schedule
 
 
 class JobView(viewsets.GenericViewSet,
@@ -48,19 +48,22 @@ class JobView(viewsets.GenericViewSet,
         employee.current_job = serializer.instance
         employee.save()
 
+        Q_Schedule.objects.filter(name=f"Deactive_Employee_{employee.pk}").delete()
+        user = employee.user
+        user.is_active = True
+        user.save()
+
         return Response(data=serializer.data)
 
     @atomic
     @action(detail=False, methods=['post'])
     def terminate(self, request, *args, **kwargs):
         employee = get_object_or_404(core_models.Employee, pk=self.kwargs['employee_pk'])
-        # TODO: Check employee employment
         if not employee.is_working():
             return Response(status=status.HTTP_400_BAD_REQUEST, data="INACTIVE_EMPLOYEE")
 
-        job = employee.get_current_job()
-
         # Check job
+        job = employee.get_current_job()
         serializer = job_serializer.TerminationSerializer(
             data=self.request.data,
             context={"job": job})
