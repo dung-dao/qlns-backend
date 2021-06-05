@@ -2,6 +2,7 @@ from django.db import transaction
 from django.db.models import ProtectedError
 from django.db.transaction import atomic
 from django.shortcuts import get_object_or_404
+from formulas.errors import FormulaError
 from rest_framework import permissions
 from rest_framework import status
 from rest_framework import viewsets, mixins
@@ -69,9 +70,9 @@ class SalaryTemplateView(
         try:
             for p in template.payrolls.all():
                 p.calculate_salary()
-        except Exception:
+        except FormulaError:
             transaction.set_rollback(True)
-            return Response(status=status.HTTP_400_BAD_REQUEST, data="Invalid template")
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="Invalid formula")
 
         return Response(data=serializer.data)
 

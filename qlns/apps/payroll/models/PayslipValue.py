@@ -10,3 +10,14 @@ class PayslipValue(models.Model):
 
     num_value = models.DecimalField(max_digits=18, decimal_places=2, null=True)
     str_value = models.CharField(max_length=1000, null=True)
+
+    def get_formatted_value(self):
+        # String data doesn't need to be formatted
+        if self.str_value is not None:
+            return self.str_value
+
+        # Format currency
+        if self.num_value is not None:
+            if self.field.datatype == 'Currency':
+                return f'{self.num_value:,}'
+            return str(self.num_value)

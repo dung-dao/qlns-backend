@@ -6,6 +6,7 @@ from qlns.apps.payroll.serializers.salary_template_field_serializer import Salar
 
 class PayslipValueSerializer(serializers.ModelSerializer):
     field = SalaryTemplateFieldSerializer(read_only=True)
+    formatted_value = serializers.CharField(read_only=True, source='get_formatted_value')
 
     class Meta:
         model = PayslipValue

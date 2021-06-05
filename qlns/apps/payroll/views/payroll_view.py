@@ -9,6 +9,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from formulas.errors import FormulaError
 from rest_framework import status, permissions
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
@@ -80,7 +81,7 @@ class PayrollView(
             return Response(status=status.HTTP_400_BAD_REQUEST, data="Cannot modify confirmed payroll")
         try:
             payroll.calculate_salary()
-        except Exception:
+        except FormulaError:
             return Response(status=status.HTTP_400_BAD_REQUEST, data="Invalid template")
         return Response()
 
@@ -216,6 +217,7 @@ class PayrollView(
                         value = int(e.num_value)
                     else:
                         value = e.num_value
+                    value = f'{value:,}'
                 else:
                     value = e.str_value
                 return {
