@@ -229,7 +229,7 @@ class PayrollView(
                 map_value,
                 payslip.values.select_related('field').all().order_by('field__index')))
 
-            payroll_name = 'Phiếu lương tháng 4 2021'
+            payroll_name = f'Thông báo thông tin bảng lương {payroll.period.start_date.month}/{payroll.period.start_date.year}'
             payslip_name = f'Phiếu lương {payroll.period.start_date.month}/{payroll.period.start_date.year}'
 
             html_context = {
