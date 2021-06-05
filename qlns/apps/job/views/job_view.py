@@ -16,8 +16,7 @@ from qlns.apps.job import serializers as job_serializer
 class JobView(viewsets.GenericViewSet,
               mixins.ListModelMixin,
               mixins.RetrieveModelMixin,
-              mixins.CreateModelMixin,
-              mixins.DestroyModelMixin):
+              mixins.CreateModelMixin, ):
     serializer_class = job_serializer.JobSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
