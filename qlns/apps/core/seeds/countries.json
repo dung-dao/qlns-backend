@@ -1,0 +1,1353 @@
+[
+    {
+        "model": "core.Country",
+        "pk": 1,
+        "fields": {
+            "name": "Afghan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 2,
+        "fields": {
+            "name": "Albanian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 3,
+        "fields": {
+            "name": "Algerian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 4,
+        "fields": {
+            "name": "American"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 5,
+        "fields": {
+            "name": "Andorran"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 6,
+        "fields": {
+            "name": "Angolan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 7,
+        "fields": {
+            "name": "Antiguans"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 8,
+        "fields": {
+            "name": "Argentinean"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 9,
+        "fields": {
+            "name": "Armenian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 10,
+        "fields": {
+            "name": "Australian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 11,
+        "fields": {
+            "name": "Austrian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 12,
+        "fields": {
+            "name": "Azerbaijani"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 13,
+        "fields": {
+            "name": "Bahamian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 14,
+        "fields": {
+            "name": "Bahraini"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 15,
+        "fields": {
+            "name": "Bangladeshi"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 16,
+        "fields": {
+            "name": "Barbadian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 17,
+        "fields": {
+            "name": "Barbudans"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 18,
+        "fields": {
+            "name": "Batswana"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 19,
+        "fields": {
+            "name": "Belarusian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 20,
+        "fields": {
+            "name": "Belgian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 21,
+        "fields": {
+            "name": "Belizean"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 22,
+        "fields": {
+            "name": "Beninese"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 23,
+        "fields": {
+            "name": "Bhutanese"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 24,
+        "fields": {
+            "name": "Bolivian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 25,
+        "fields": {
+            "name": "Bosnian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 26,
+        "fields": {
+            "name": "Brazilian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 27,
+        "fields": {
+            "name": "British"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 28,
+        "fields": {
+            "name": "Bruneian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 29,
+        "fields": {
+            "name": "Bulgarian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 30,
+        "fields": {
+            "name": "Burkinabe"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 31,
+        "fields": {
+            "name": "Burmese"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 32,
+        "fields": {
+            "name": "Burundian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 33,
+        "fields": {
+            "name": "Cambodian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 34,
+        "fields": {
+            "name": "Cameroonian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 35,
+        "fields": {
+            "name": "Canadian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 36,
+        "fields": {
+            "name": "Cape Verdean"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 37,
+        "fields": {
+            "name": "Central African"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 38,
+        "fields": {
+            "name": "Chadian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 39,
+        "fields": {
+            "name": "Chilean"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 40,
+        "fields": {
+            "name": "Chinese"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 41,
+        "fields": {
+            "name": "Colombian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 42,
+        "fields": {
+            "name": "Comoran"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 43,
+        "fields": {
+            "name": "Congolese"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 44,
+        "fields": {
+            "name": "Costa Rican"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 45,
+        "fields": {
+            "name": "Croatian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 46,
+        "fields": {
+            "name": "Cuban"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 47,
+        "fields": {
+            "name": "Cypriot"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 48,
+        "fields": {
+            "name": "Czech"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 49,
+        "fields": {
+            "name": "Danish"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 50,
+        "fields": {
+            "name": "Djibouti"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 51,
+        "fields": {
+            "name": "Dominican"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 52,
+        "fields": {
+            "name": "Dutch"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 53,
+        "fields": {
+            "name": "East Timorese"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 54,
+        "fields": {
+            "name": "Ecuadorean"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 55,
+        "fields": {
+            "name": "Egyptian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 56,
+        "fields": {
+            "name": "Emirian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 57,
+        "fields": {
+            "name": "Equatorial Guinean"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 58,
+        "fields": {
+            "name": "Eritrean"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 59,
+        "fields": {
+            "name": "Estonian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 60,
+        "fields": {
+            "name": "Ethiopian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 61,
+        "fields": {
+            "name": "Fijian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 62,
+        "fields": {
+            "name": "Filipino"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 63,
+        "fields": {
+            "name": "Finnish"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 64,
+        "fields": {
+            "name": "French"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 65,
+        "fields": {
+            "name": "Gabonese"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 66,
+        "fields": {
+            "name": "Gambian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 67,
+        "fields": {
+            "name": "Georgian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 68,
+        "fields": {
+            "name": "German"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 69,
+        "fields": {
+            "name": "Ghanaian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 70,
+        "fields": {
+            "name": "Greek"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 71,
+        "fields": {
+            "name": "Grenadian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 72,
+        "fields": {
+            "name": "Guatemalan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 73,
+        "fields": {
+            "name": "Guinea-Bissauan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 74,
+        "fields": {
+            "name": "Guinean"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 75,
+        "fields": {
+            "name": "Guyanese"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 76,
+        "fields": {
+            "name": "Haitian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 77,
+        "fields": {
+            "name": "Herzegovinian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 78,
+        "fields": {
+            "name": "Honduran"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 79,
+        "fields": {
+            "name": "Hungarian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 80,
+        "fields": {
+            "name": "I-Kiribati"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 81,
+        "fields": {
+            "name": "Icelander"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 82,
+        "fields": {
+            "name": "Indian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 83,
+        "fields": {
+            "name": "Indonesian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 84,
+        "fields": {
+            "name": "Iranian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 85,
+        "fields": {
+            "name": "Iraqi"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 86,
+        "fields": {
+            "name": "Irish"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 87,
+        "fields": {
+            "name": "Israeli"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 88,
+        "fields": {
+            "name": "Italian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 89,
+        "fields": {
+            "name": "Ivorian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 90,
+        "fields": {
+            "name": "Jamaican"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 91,
+        "fields": {
+            "name": "Japanese"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 92,
+        "fields": {
+            "name": "Jordanian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 93,
+        "fields": {
+            "name": "Kazakhstani"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 94,
+        "fields": {
+            "name": "Kenyan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 95,
+        "fields": {
+            "name": "Kittian and Nevisian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 96,
+        "fields": {
+            "name": "Kuwaiti"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 97,
+        "fields": {
+            "name": "Kyrgyz"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 98,
+        "fields": {
+            "name": "Laotian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 99,
+        "fields": {
+            "name": "Latvian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 100,
+        "fields": {
+            "name": "Lebanese"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 101,
+        "fields": {
+            "name": "Liberian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 102,
+        "fields": {
+            "name": "Libyan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 103,
+        "fields": {
+            "name": "Liechtensteiner"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 104,
+        "fields": {
+            "name": "Lithuanian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 105,
+        "fields": {
+            "name": "Luxembourger"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 106,
+        "fields": {
+            "name": "Macedonian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 107,
+        "fields": {
+            "name": "Malagasy"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 108,
+        "fields": {
+            "name": "Malawian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 109,
+        "fields": {
+            "name": "Malaysian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 110,
+        "fields": {
+            "name": "Maldivan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 111,
+        "fields": {
+            "name": "Malian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 112,
+        "fields": {
+            "name": "Maltese"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 113,
+        "fields": {
+            "name": "Marshallese"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 114,
+        "fields": {
+            "name": "Mauritanian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 115,
+        "fields": {
+            "name": "Mauritian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 116,
+        "fields": {
+            "name": "Mexican"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 117,
+        "fields": {
+            "name": "Micronesian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 118,
+        "fields": {
+            "name": "Moldovan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 119,
+        "fields": {
+            "name": "Monacan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 120,
+        "fields": {
+            "name": "Mongolian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 121,
+        "fields": {
+            "name": "Moroccan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 122,
+        "fields": {
+            "name": "Mosotho"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 123,
+        "fields": {
+            "name": "Motswana"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 124,
+        "fields": {
+            "name": "Mozambican"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 125,
+        "fields": {
+            "name": "Namibian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 126,
+        "fields": {
+            "name": "Nauruan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 127,
+        "fields": {
+            "name": "Nepalese"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 128,
+        "fields": {
+            "name": "New Zealander"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 129,
+        "fields": {
+            "name": "Nicaraguan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 130,
+        "fields": {
+            "name": "Nigerian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 131,
+        "fields": {
+            "name": "Nigerien"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 132,
+        "fields": {
+            "name": "North Korean"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 133,
+        "fields": {
+            "name": "Northern Irish"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 134,
+        "fields": {
+            "name": "Norwegian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 135,
+        "fields": {
+            "name": "Omani"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 136,
+        "fields": {
+            "name": "Pakistani"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 137,
+        "fields": {
+            "name": "Palauan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 138,
+        "fields": {
+            "name": "Panamanian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 139,
+        "fields": {
+            "name": "Papua New Guinean"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 140,
+        "fields": {
+            "name": "Paraguayan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 141,
+        "fields": {
+            "name": "Peruvian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 142,
+        "fields": {
+            "name": "Polish"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 143,
+        "fields": {
+            "name": "Portuguese"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 144,
+        "fields": {
+            "name": "Qatari"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 145,
+        "fields": {
+            "name": "Romanian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 146,
+        "fields": {
+            "name": "Russian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 147,
+        "fields": {
+            "name": "Rwandan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 148,
+        "fields": {
+            "name": "Saint Lucian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 149,
+        "fields": {
+            "name": "Salvadoran"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 150,
+        "fields": {
+            "name": "Samoan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 151,
+        "fields": {
+            "name": "San Marinese"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 152,
+        "fields": {
+            "name": "Sao Tomean"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 153,
+        "fields": {
+            "name": "Saudi"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 154,
+        "fields": {
+            "name": "Scottish"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 155,
+        "fields": {
+            "name": "Senegalese"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 156,
+        "fields": {
+            "name": "Serbian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 157,
+        "fields": {
+            "name": "Seychellois"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 158,
+        "fields": {
+            "name": "Sierra Leonean"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 159,
+        "fields": {
+            "name": "Singaporean"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 160,
+        "fields": {
+            "name": "Slovakian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 161,
+        "fields": {
+            "name": "Slovenian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 162,
+        "fields": {
+            "name": "Solomon Islander"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 163,
+        "fields": {
+            "name": "Somali"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 164,
+        "fields": {
+            "name": "South African"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 165,
+        "fields": {
+            "name": "South Korean"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 166,
+        "fields": {
+            "name": "Spanish"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 167,
+        "fields": {
+            "name": "Sri Lankan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 168,
+        "fields": {
+            "name": "Sudanese"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 169,
+        "fields": {
+            "name": "Surinamer"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 170,
+        "fields": {
+            "name": "Swazi"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 171,
+        "fields": {
+            "name": "Swedish"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 172,
+        "fields": {
+            "name": "Swiss"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 173,
+        "fields": {
+            "name": "Syrian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 174,
+        "fields": {
+            "name": "Taiwanese"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 175,
+        "fields": {
+            "name": "Tajik"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 176,
+        "fields": {
+            "name": "Tanzanian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 177,
+        "fields": {
+            "name": "Thai"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 178,
+        "fields": {
+            "name": "Togolese"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 179,
+        "fields": {
+            "name": "Tongan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 180,
+        "fields": {
+            "name": "Trinidadian or Tobagonian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 181,
+        "fields": {
+            "name": "Tunisian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 182,
+        "fields": {
+            "name": "Turkish"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 183,
+        "fields": {
+            "name": "Tuvaluan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 184,
+        "fields": {
+            "name": "Ugandan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 185,
+        "fields": {
+            "name": "Ukrainian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 186,
+        "fields": {
+            "name": "Uruguayan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 187,
+        "fields": {
+            "name": "Uzbekistani"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 188,
+        "fields": {
+            "name": "Venezuelan"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 189,
+        "fields": {
+            "name": "Vietnamese"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 190,
+        "fields": {
+            "name": "Welsh"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 191,
+        "fields": {
+            "name": "Yemenite"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 192,
+        "fields": {
+            "name": "Zambian"
+        }
+    },
+    {
+        "model": "core.Country",
+        "pk": 193,
+        "fields": {
+            "name": "Zimbabwean"
+        }
+    }
+]

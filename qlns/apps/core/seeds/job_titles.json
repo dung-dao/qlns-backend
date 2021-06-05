@@ -1,0 +1,370 @@
+[
+    {
+        "model": "job.JobTitle",
+        "pk": 1,
+        "fields": {
+            "name": "Accounts Clerk",
+            "description": "Accounts Clerk"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 2,
+        "fields": {
+            "name": "Art Director",
+            "description": "Art Director"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 3,
+        "fields": {
+            "name": "Assistant Brand Manager",
+            "description": "Assistant Brand Manager"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 4,
+        "fields": {
+            "name": "Assistant HR Manager",
+            "description": "Assistant HR Manager"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 5,
+        "fields": {
+            "name": "Assistant Manager- Customer Success",
+            "description": ""
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 6,
+        "fields": {
+            "name": "Business Manager - Advertising",
+            "description": "Business Manager - Advertising"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 7,
+        "fields": {
+            "name": "CA",
+            "description": "Chief Architect"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 8,
+        "fields": {
+            "name": "CEO",
+            "description": "Chief Executive Officer"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 9,
+        "fields": {
+            "name": "Community Manager",
+            "description": "Community Manager"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 10,
+        "fields": {
+            "name": "Content Writer",
+            "description": "Content Writer"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 11,
+        "fields": {
+            "name": "Credit Analyst",
+            "description": ""
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 12,
+        "fields": {
+            "name": "CTO",
+            "description": "Chief Technical Officer"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 13,
+        "fields": {
+            "name": "Customer Success Executive",
+            "description": ""
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 14,
+        "fields": {
+            "name": "Digital Marketing Manager",
+            "description": "Digital Marketing Manager"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 15,
+        "fields": {
+            "name": "Finance Manager",
+            "description": "Finance Manager"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 16,
+        "fields": {
+            "name": "Financial Executive",
+            "description": ""
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 17,
+        "fields": {
+            "name": "Front End Developer",
+            "description": "Front End Developer"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 18,
+        "fields": {
+            "name": "Global HR Manager",
+            "description": "Global HR Manager"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 19,
+        "fields": {
+            "name": "Global Marketing Manager",
+            "description": "Global Marketing Manager"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 20,
+        "fields": {
+            "name": "HR Admin",
+            "description": "HR Admin"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 21,
+        "fields": {
+            "name": "HR Executive",
+            "description": "HR Executive"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 22,
+        "fields": {
+            "name": "IT Executive",
+            "description": "IT Executive"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 23,
+        "fields": {
+            "name": "IT Manager",
+            "description": "IT Manager"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 24,
+        "fields": {
+            "name": "IT technical support officer",
+            "description": "IT technical support officer"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 25,
+        "fields": {
+            "name": "Junior Sales Executive",
+            "description": "Junior Sales Executive"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 26,
+        "fields": {
+            "name": "Local Marketing Manager",
+            "description": "Local Marketing Manager"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 27,
+        "fields": {
+            "name": "Management Trainee",
+            "description": ""
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 28,
+        "fields": {
+            "name": "Product and Training Manager",
+            "description": ""
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 29,
+        "fields": {
+            "name": "Production Manager",
+            "description": "Production Manager"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 30,
+        "fields": {
+            "name": "QA Engineer",
+            "description": "QA Engineer"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 31,
+        "fields": {
+            "name": "Regional HR Manager",
+            "description": "Regional HR Manager"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 32,
+        "fields": {
+            "name": "Regional Sales Manager",
+            "description": "Regional Sales Manager"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 33,
+        "fields": {
+            "name": "Researcher",
+            "description": "Researcher"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 34,
+        "fields": {
+            "name": "Sales Executive",
+            "description": "Sales Executive"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 35,
+        "fields": {
+            "name": "Sales Manager",
+            "description": "Sales Manager"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 36,
+        "fields": {
+            "name": "Sample Job Title",
+            "description": "Sample Job Title"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 37,
+        "fields": {
+            "name": "Senior Manager IT",
+            "description": "Senior Manager IT"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 38,
+        "fields": {
+            "name": "Senior Technical Support Engineer",
+            "description": "Senior Technical Support Engineer"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 39,
+        "fields": {
+            "name": "SEO Specialist",
+            "description": "SEO Specialist"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 40,
+        "fields": {
+            "name": "Social Media Editor",
+            "description": "Social Media Editor"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 41,
+        "fields": {
+            "name": "Software Development Manager",
+            "description": "Software Development Manager"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 42,
+        "fields": {
+            "name": "Software Engineer",
+            "description": "Software Engineer"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 43,
+        "fields": {
+            "name": "Sr. Sales Executive",
+            "description": ""
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 44,
+        "fields": {
+            "name": "Technical Support Engineer",
+            "description": "Technical Support Engineer"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 45,
+        "fields": {
+            "name": "Technical Support Manager",
+            "description": "Technical Support Manager"
+        }
+    },
+    {
+        "model": "job.JobTitle",
+        "pk": 46,
+        "fields": {
+            "name": "Trainee",
+            "description": "Trainee"
+        }
+    }
+]
