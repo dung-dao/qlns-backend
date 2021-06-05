@@ -60,8 +60,5 @@ class Migration(migrations.Migration):
                 (query, ["Công nghỉ lễ", "holiday_point", "Số công được nhận do nghỉ lễ"]),
 
             ],
-            reverse_sql=[
-                "DELETE FROM qlns.payroll_salarysystemfield"
-            ]
         )
     ]

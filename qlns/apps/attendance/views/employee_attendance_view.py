@@ -71,7 +71,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
 
         # Face recognition
         app_config = ApplicationConfig.objects.first()
-        face_id_required = getattr(app_config, 'face_id_required', False)
+        face_id_required = getattr(app_config, 'require_face_id', False)
         face_img = request.data.get('face_image', None)
         face_authorized = None
 

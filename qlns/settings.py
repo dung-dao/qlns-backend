@@ -41,6 +41,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'corsheaders',
+    'django_q',
 
     'qlns.apps.authentication',
     'qlns.apps.core',
@@ -162,3 +163,10 @@ EMAIL_HOST_USER = 'uitstudentshrm@gmail.com'
 EMAIL_HOST_PASSWORD = 'tpcnlwrhmrxbhkpz'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+
+# Django Q
+Q_CLUSTER = {
+    "name": "qlns",
+    "orm": "default",
+    "timeout": 60,
+}

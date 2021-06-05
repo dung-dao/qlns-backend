@@ -1,5 +1,6 @@
 from django.db.transaction import atomic
 from django.shortcuts import get_object_or_404
+from django_q.models import Schedule as Q_Schedule
 from rest_framework import permissions
 from rest_framework import status
 from rest_framework import viewsets, mixins
@@ -15,8 +16,7 @@ from qlns.apps.job import serializers as job_serializer
 class JobView(viewsets.GenericViewSet,
               mixins.ListModelMixin,
               mixins.RetrieveModelMixin,
-              mixins.CreateModelMixin,
-              mixins.DestroyModelMixin):
+              mixins.CreateModelMixin, ):
     serializer_class = job_serializer.JobSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -47,19 +47,22 @@ class JobView(viewsets.GenericViewSet,
         employee.current_job = serializer.instance
         employee.save()
 
+        Q_Schedule.objects.filter(name=f"Deactive_Employee_{employee.pk}").delete()
+        user = employee.user
+        user.is_active = True
+        user.save()
+
         return Response(data=serializer.data)
 
     @atomic
     @action(detail=False, methods=['post'])
     def terminate(self, request, *args, **kwargs):
         employee = get_object_or_404(core_models.Employee, pk=self.kwargs['employee_pk'])
-        # TODO: Check employee employment
         if not employee.is_working():
             return Response(status=status.HTTP_400_BAD_REQUEST, data="INACTIVE_EMPLOYEE")
 
-        job = employee.get_current_job()
-
         # Check job
+        job = employee.get_current_job()
         serializer = job_serializer.TerminationSerializer(
             data=self.request.data,
             context={"job": job})
@@ -75,5 +78,13 @@ class JobView(viewsets.GenericViewSet,
 
         employee.current_job = job
         employee.save()
+
+        Q_Schedule.objects.create(
+            func="qlns.apps.job.tasks.deactivate_employee",
+            kwargs={"employee_id": employee.pk},
+            name=f"Deactive_Employee_{employee.pk}",
+            schedule_type=Q_Schedule.ONCE,
+            next_run=job.termination.date,
+        )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
