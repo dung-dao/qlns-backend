@@ -1,4 +1,5 @@
-from datetime import timedelta, date
+import datetime
+from datetime import timedelta
 
 import pytz
 from dateutil.parser import isoparse
@@ -29,10 +30,12 @@ def get_next_date(dt):
 
 
 def to_date_string(dt):
-    if isinstance(dt, date):
+    if type(dt) is datetime.date:
         return dt.strftime('%d/%m/%Y')
-    local_date = timezone.localtime(dt)
-    return local_date.strftime('%d/%m/%Y')
+    elif type(dt) is datetime.datetime:
+        local_date = timezone.localtime(dt)
+        return local_date.strftime('%d/%m/%Y')
+    raise Exception('unreachable code')
 
 
 CRON_WEEKDAYS = {'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6, 'Sun': 0, }
