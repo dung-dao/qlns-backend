@@ -77,9 +77,11 @@ class Schedule(models.Model):
 
             # If i_date is a non-working day
             # i_date = min{nearest_workday.morning_from, nearest_workday.afternoon_from}
-            while workday_dict is None:
-                _next_day = get_next_date(i_date)
-                workday_dict = self.shift_workday(_next_day, _next_day.weekday())
+            if workday_dict is None:
+                while workday_dict is None:
+                    i_date = get_next_date(i_date)
+                    workday_dict = self.shift_workday(i_date, i_date.weekday())
+
                 i_date = min(
                     workday_dict.get("morning_from", MAX_UTC_DATETIME),
                     workday_dict.get("afternoon_from", MAX_UTC_DATETIME)
