@@ -125,3 +125,4 @@ db_data/
 #debug file
 .idea/
 .vscode/
+/private_files/

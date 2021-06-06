@@ -26,5 +26,6 @@ emp_info_router.register('time_off', EmployeeTimeOffView, basename='time_off')
 urlpatterns = [
     path('', include(router.urls)),
     path('', include(emp_info_router.urls)),
-    path('time_off/', TimeOffView.as_view())
+    path('time_off/', TimeOffView.as_view()),
+    path('attendance_helper/', attendance_views.AttendanceHelper.as_view()),
 ]

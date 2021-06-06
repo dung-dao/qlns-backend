@@ -78,7 +78,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         if face_id_required and employee.face_model_path is None:
             return Response(status=status.HTTP_400_BAD_REQUEST, data='Face identity not available')
 
-        if face_img is None:
+        if face_img is None and face_id_required:
             return Response(status=status.HTTP_400_BAD_REQUEST, data='face_image required')
 
         if face_id_required:
@@ -202,7 +202,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         face_img = request.data.get('face_image', None)
         face_authorized = None
 
-        if face_img is None:
+        if face_img is None and require_face_id:
             return Response(status=status.HTTP_400_BAD_REQUEST, data='face_image required')
 
         if require_face_id:
