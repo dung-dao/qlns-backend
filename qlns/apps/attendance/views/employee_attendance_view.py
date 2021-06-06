@@ -76,8 +76,13 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         face_id_required = getattr(app_config, 'require_face_id', False)
         face_img = request.data.get('face_image', None)
         resized_image = None
-        if face_img is not None:
-            resized_image = Image.open(face_img.file).convert("RGB")
+        if face_img is not None and face_img.file is not None:
+            try:
+                resized_image = Image.open(face_img.file).convert("RGB")
+                resized_image.verify()
+            except Exception:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data={"error": "face_image is not an image file"})
+
             img_width, img_height = resized_image.size
             max_size = max(img_width, img_height)
             ratio = 1024 / max_size
@@ -213,8 +218,13 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         face_authorized = None
 
         resized_image = None
-        if face_img is not None:
-            resized_image = Image.open(face_img.file).convert("RGB")
+        if face_img is not None and face_img.file is not None:
+            try:
+                resized_image = Image.open(face_img.file).convert("RGB")
+                resized_image.verify()
+            except Exception:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data={"error": "face_image is not an image file"})
+
             img_width, img_height = resized_image.size
             max_size = max(img_width, img_height)
             ratio = 1024 / max_size
