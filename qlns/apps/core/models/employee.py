@@ -3,6 +3,7 @@ import pickle
 import uuid
 
 import face_recognition
+import numpy as np
 from django.contrib.auth.models import User
 from django.db import models
 
@@ -116,7 +117,7 @@ class Employee(models.Model):
         if self.face_model_path is None:
             return False
 
-        pic = face_recognition.load_image_file(image)
+        pic = np.array(image.convert('RGB'))
         faces = face_recognition.face_locations(pic)
 
         if len(faces) != 1:

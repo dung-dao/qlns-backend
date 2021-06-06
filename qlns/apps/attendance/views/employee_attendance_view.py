@@ -1,3 +1,5 @@
+import PIL
+from PIL import Image
 from django.db.models import Q
 from django.db.transaction import atomic, set_rollback
 from django.shortcuts import get_object_or_404
@@ -73,6 +75,14 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         app_config = ApplicationConfig.objects.first()
         face_id_required = getattr(app_config, 'require_face_id', False)
         face_img = request.data.get('face_image', None)
+        resized_image = None
+        if face_img is not None:
+            resized_image = Image.open(face_img.file).convert("RGB")
+            img_width, img_height = resized_image.size
+            max_size = max(img_width, img_height)
+            ratio = 1024 / max_size
+            resized_image = resized_image.resize((int(img_width * ratio), int(img_height * ratio)), PIL.Image.NEAREST)
+
         face_authorized = None
 
         if face_id_required and employee.face_model_path is None:
@@ -82,7 +92,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
             return Response(status=status.HTTP_400_BAD_REQUEST, data='face_image required')
 
         if face_id_required:
-            face_authorized = employee.identify_image(face_img.file)
+            face_authorized = employee.identify_image(resized_image)
             if not face_authorized and check_in_note is None:
                 return Response(status=status.HTTP_401_UNAUTHORIZED, data='Face recognition failed')
 
@@ -202,11 +212,19 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         face_img = request.data.get('face_image', None)
         face_authorized = None
 
+        resized_image = None
+        if face_img is not None:
+            resized_image = Image.open(face_img.file).convert("RGB")
+            img_width, img_height = resized_image.size
+            max_size = max(img_width, img_height)
+            ratio = 1024 / max_size
+            resized_image = resized_image.resize((int(img_width * ratio), int(img_height * ratio)), PIL.Image.NEAREST)
+
         if face_img is None and require_face_id:
             return Response(status=status.HTTP_400_BAD_REQUEST, data='face_image required')
 
         if require_face_id:
-            face_authorized = employee.identify_image(face_img.file)
+            face_authorized = employee.identify_image(resized_image)
             if not face_authorized and check_out_note is None:
                 return Response(status=status.HTTP_401_UNAUTHORIZED, data='Face recognition failed')
 
