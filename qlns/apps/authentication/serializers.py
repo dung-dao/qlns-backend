@@ -27,7 +27,8 @@ class GroupSerializer(serializers.ModelSerializer):
 
     all_perm_str_query = "SELECT DISTINCT perm.* FROM auth_permission perm LEFT JOIN qlns.django_content_type " \
                          "ctt ON perm.content_type_id = ctt.id WHERE NOT ctt.app_label='admin' AND NOT " \
-                         "ctt.app_label='sessions' AND NOT ctt.app_label='contenttypes' ORDER BY perm.id "
+                         "ctt.app_label='sessions' AND NOT ctt.app_label='contenttypes' AND NOT " \
+                         "ctt.app_label='django_q' ORDER BY perm.id "
 
     def get_all_perms(self):
         return Permission.objects.raw(self.all_perm_str_query)
@@ -61,8 +62,8 @@ class GroupSerializer(serializers.ModelSerializer):
         all_perms = self.get_all_perms()
         permission_data = validated_data.pop('permissions')
         enable_perms = list(filter(lambda e: e['has_perm'], permission_data))
-        permission_code_names = list(map(lambda e: e['codename'], enable_perms))
-        permissions = list(filter(lambda perm: perm.codename in permission_code_names, all_perms))
+        permission_code_pks = list(map(lambda e: e['id'], enable_perms))
+        permissions = list(filter(lambda perm: perm.id in permission_code_pks, all_perms))
 
         if len(permissions) > 0:
             newgroup.permissions.set(permissions)
@@ -76,8 +77,8 @@ class GroupSerializer(serializers.ModelSerializer):
         all_perms = self.get_all_perms()
         permission_data = validated_data.pop('permissions')
         enable_perms = list(filter(lambda e: e['has_perm'], permission_data))
-        permission_code_names = list(map(lambda e: e['codename'], enable_perms))
-        permissions = list(filter(lambda perm: perm.codename in permission_code_names, all_perms))
+        permission_code_pks = list(map(lambda e: e['id'], enable_perms))
+        permissions = list(filter(lambda perm: perm.id in permission_code_pks, all_perms))
 
         if len(permissions) > 0:
             instance.permissions.set(permissions)

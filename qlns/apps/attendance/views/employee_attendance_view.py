@@ -12,6 +12,8 @@ from rest_framework.response import Response
 
 from qlns.apps.attendance.models import Attendance, Tracking, TimeOff, Period
 from qlns.apps.attendance.serializers.attendance import AttendanceSerializer
+from qlns.apps.attendance.serializers.attendance.check_in_serializer import CheckInDataSerializer
+from qlns.apps.attendance.serializers.attendance.check_out_serializer import CheckOutDataSerializer
 from qlns.apps.attendance.serializers.attendance.edit_actual_serializer import EditActualSerializer
 from qlns.apps.attendance.serializers.attendance.edit_overtime_serializer import EditOvertimeSerializer
 from qlns.apps.authentication.permissions import DjangoModelPermissionOrIsOwner, ActionPermission, IsOwner
@@ -71,13 +73,18 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
 
         check_in_note = request.data.get('check_in_note', None)
 
+        serializer = CheckInDataSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
+
         # Face recognition
         app_config = ApplicationConfig.objects.first()
         face_id_required = getattr(app_config, 'require_face_id', False)
         face_img = request.data.get('face_image', None)
         resized_image = None
-        if face_img is not None:
+        if face_img is not None and face_img.file is not None:
             resized_image = Image.open(face_img.file).convert("RGB")
+
             img_width, img_height = resized_image.size
             max_size = max(img_width, img_height)
             ratio = 1024 / max_size
@@ -199,6 +206,10 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
             .prefetch_related('tracking_data') \
             .first()
 
+        serializer = CheckOutDataSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
+
         if attendance is None:
             return Response(status=status.HTTP_400_BAD_REQUEST, data="NOT_CHECK_IN_YET")
 
@@ -213,8 +224,9 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         face_authorized = None
 
         resized_image = None
-        if face_img is not None:
+        if face_img is not None and face_img.file is not None:
             resized_image = Image.open(face_img.file).convert("RGB")
+
             img_width, img_height = resized_image.size
             max_size = max(img_width, img_height)
             ratio = 1024 / max_size
