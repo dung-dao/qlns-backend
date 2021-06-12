@@ -22,7 +22,8 @@ class AttendanceHelper(APIView):
             "first_clock_in": None,
             "last_clock_out": None,
             "last_action": None,
-            "last_action_at": None
+            "last_action_at": None,
+            "location": None
         }
 
         attendance = Attendance.objects.order_by('-date').first()
@@ -51,6 +52,8 @@ class AttendanceHelper(APIView):
         if last_tracker.check_out_time is None:
             result['next_step'] = 'clock out'
 
-        serializer = AttendanceHelperSerializer(instance=result)
+        # Location
+        result["location"] = employee.get_job_location()
 
+        serializer = AttendanceHelperSerializer(instance=result)
         return Response(data=serializer.data)
