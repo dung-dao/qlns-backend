@@ -5,6 +5,8 @@ from qlns.apps.attendance.serializers.attendance.TrackingSerializer import Track
 
 
 class AttendanceSerializer(serializers.ModelSerializer):
+    schedule_hours = serializers.FloatField(read_only=True, source='get_schedule_hours')
+
     class Meta:
         model = Attendance
         fields = ('id', 'owner', 'date',
@@ -15,6 +17,6 @@ class AttendanceSerializer(serializers.ModelSerializer):
                   'ot_work_hours',
                   'ot_hours_modified',
                   'ot_hours_modification_note',
-                  'reviewed_by', 'confirmed_by', 'status', 'tracking_data',)
+                  'reviewed_by', 'confirmed_by', 'status', 'tracking_data', 'schedule_hours')
 
     tracking_data = TrackingSerializer(read_only=True, many=True)

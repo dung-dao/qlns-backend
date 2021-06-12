@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 
 from qlns.apps.attendance import models as attendance_models
 
@@ -41,6 +42,17 @@ class Attendance(models.Model):
     ot_hours_modification_note = models.TextField(null=True)
 
     status = models.CharField(max_length=15, choices=AttendanceLogStatus.choices, default='Pending')
+
+    def get_schedule_hours(self):
+        period_start_date = self.period.start_date
+        period_end_date = self.period.end_date
+        schedule_hours = self.schedule.get_schedule_work_hours()
+
+        holidays = attendance_models.Holiday.objects\
+            .filter(Q(start_date__gte=period_start_date) & Q(start_date__lte=period_end_date))
+
+        holiday_hours = sum(list(map(lambda hld: hld.trim_work_hours(period_start_date, period_end_date), holidays)))
+        return schedule_hours - holiday_hours
 
     def calculate_work_hours(self):
         trackers = attendance_models.Tracking.objects.filter(attendance=self.pk)

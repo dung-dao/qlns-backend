@@ -20,6 +20,8 @@ class FilteredAttendanceListSerializer(serializers.ListSerializer):
 
 
 class FilteredAttendanceSerializer(serializers.ModelSerializer):
+    schedule_hours = serializers.FloatField(read_only=True, source='get_schedule_hours')
+
     class Meta:
         model = Attendance
         fields = ('id', 'owner', 'date',
@@ -31,15 +33,13 @@ class FilteredAttendanceSerializer(serializers.ModelSerializer):
                   'ot_hours_modified',
                   'ot_hours_modification_note',
 
-                  'reviewed_by', 'confirmed_by', 'status',)
+                  'reviewed_by', 'confirmed_by', 'status', 'schedule_hours')
         list_serializer_class = FilteredAttendanceListSerializer
-    # tracking_data = TrackingSerializer(read_only=True, many=True)
 
 
 class EmployeeWithAttendanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
-        fields = ('id', 'first_name', 'last_name', 'avatar', 'attendance', 'employment_status')
+        fields = ('id', 'first_name', 'last_name', 'avatar', 'attendance')
 
     attendance = FilteredAttendanceSerializer(many=True)
-    employment_status = serializers.CharField(source='get_employment_status', read_only=True)
