@@ -1,3 +1,5 @@
+import re
+
 from django.db import transaction
 from django.db.models import ProtectedError
 from django.db.transaction import atomic
@@ -90,7 +92,32 @@ class SalaryTemplateView(
 
         template.pk = None
         template.is_default = False
-        template.name = (template.name + " (copy)").strip()
+
+        # Old solution
+        # old_name = template.name
+        # index = 1
+        #
+        # while SalaryTemplate.objects.filter(name=old_name + f' ({index})').exists() and \
+        #         SalaryTemplate.objects.filter(name=old_name):
+        #     index = index + 1
+        #
+        # template.name = old_name + f' ({index})'
+
+        # New solution
+        old_name = template.name
+        num = 1
+
+        last_duplicate_template = SalaryTemplate.objects \
+            .filter(name__iregex=fr'{template.name} \([0-9]+\)') \
+            .order_by('-name') \
+            .first()
+
+        if last_duplicate_template is not None:
+            num_str = re.search(r'\([0-9]+\)(?!.*\([0-9]+\))', last_duplicate_template.name).group(0)
+            num = int(num_str.replace('(', '').replace(')', '')) + 1
+
+        template.name = old_name + f' ({num})'
+
         template.save()
 
         for field in fields:
