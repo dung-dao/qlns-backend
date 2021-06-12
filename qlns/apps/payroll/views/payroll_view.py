@@ -50,6 +50,8 @@ class PayrollView(
         serializer = PayrollSerializer(data=request.data, context=ctx)
         if serializer.is_valid():
             serializer.save()
+            payroll = serializer.instance
+            payroll.calculate_salary()
             return Response(data=serializer.data)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)

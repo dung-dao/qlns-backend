@@ -6,6 +6,7 @@ from qlns.apps.payroll.serializers.salary_template_field_serializer import Salar
 
 class SalaryTemplateSerializer(serializers.ModelSerializer):
     fields = SalaryTemplateFieldSerializer(many=True, read_only=False)
+    can_be_modified = serializers.BooleanField(source='is_modifiable', read_only=True)
 
     class Meta:
         fields = '__all__'
