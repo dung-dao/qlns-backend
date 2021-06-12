@@ -224,7 +224,7 @@ class PayrollView(
                     value = e.str_value
                 return {
                     'name': e.field.display_name,
-                    'value': value if e.field.datatype != "Currency" else str(value) + ' ₫'
+                    'value': value if e.field.datatype != "Currency" else str(f'{int(e.num_value):,}') + ' ₫'
                 }
 
             values = list(map(
