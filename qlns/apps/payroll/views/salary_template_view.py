@@ -116,7 +116,7 @@ class SalaryTemplateView(
             num_str = re.search(r'\([0-9]+\)(?!.*\([0-9]+\))', last_duplicate_template.name).group(0)
             num = int(num_str.replace('(', '').replace(')', '')) + 1
 
-        template.name = old_name + f' ({num})'
+        template.name = request.data.get('name',  old_name + f' ({num})')
 
         template.save()
 
