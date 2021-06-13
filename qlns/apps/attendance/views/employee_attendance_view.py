@@ -219,7 +219,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         if require_face_id:
             face_authorized = employee.identify_image(resized_image)
             if not face_authorized and not allow_unrecognised_face:
-                return Response(status=status.HTTP_401_UNAUTHORIZED, data='Face recognition failed')
+                return Response(status=status.HTTP_400_BAD_REQUEST, data='Face recognition failed')
             if not face_authorized and allow_unrecognised_face and check_out_note is None:
                 return Response(
                     status=status.HTTP_400_BAD_REQUEST,
