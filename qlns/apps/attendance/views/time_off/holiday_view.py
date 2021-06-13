@@ -14,6 +14,7 @@ class HolidayView(
     viewsets.GenericViewSet,
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin
 ):
