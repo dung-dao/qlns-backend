@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class Holiday(models.Model):
@@ -13,8 +14,14 @@ class Holiday(models.Model):
         start = max(start_time, self.start_date)
         end = min(end_time, self.end_date)
 
+        start = timezone.localtime(start)
+        end = timezone.localtime(end)
+
         if start >= end:
             return 0.0
         else:
-            duration = (end - start).seconds / 3600
-            return round(duration, 1)
+            duration = end - start
+            days = duration.days
+            seconds = duration.seconds
+            hours = days * 24 + seconds / 3600
+            return round(hours, 1)
