@@ -11,6 +11,7 @@ from qlns.apps.attendance.models import TimeOff, Holiday
 from qlns.apps.attendance.serializers import TimeOffSerializer
 from qlns.apps.authentication.permissions import DjangoModelPermissionOrIsOwner, IsOwner, ActionPermission
 from qlns.apps.core.models import Employee
+from qlns.utils.constants import MIN_UTC_DATETIME, MAX_UTC_DATETIME
 
 
 class EmployeeTimeOffView(
@@ -49,8 +50,8 @@ class EmployeeTimeOffView(
 
         # Check if overlapped with approved time off
 
-        start_date = request.data['start_date']
-        end_date = request.data['end_date']
+        start_date = request.data.get('start_date', MIN_UTC_DATETIME)
+        end_date = request.data.get('end_date', MAX_UTC_DATETIME)
         overlapped = self.get_queryset().filter(
             (Q(start_date__gte=start_date) & Q(start_date__lte=end_date) |
              Q(end_date__gte=start_date) & Q(end_date__lte=end_date)) &

@@ -57,13 +57,15 @@ class EmployeeWithAttendanceSerializer(serializers.ModelSerializer):
                 period_end_date = period.end_date
                 schedule = instance.get_current_schedule()
 
-                schedule_work_hours = schedule.get_work_hours(period_start_date, period_end_date)
-                holidays = attendance_models.Holiday.objects \
-                    .filter(Q(start_date__gte=period_start_date) &
-                            Q(start_date__lte=period_end_date) &
-                            Q(schedule=schedule))
-                holiday_hours = sum(
-                    list(map(lambda hld: hld.trim_work_hours(period_start_date, period_end_date), holidays)))
-
-                representation["schedule_hours"] = schedule_work_hours - holiday_hours / 24 * 8
+                if schedule is not None:
+                    schedule_work_hours = schedule.get_work_hours(period_start_date, period_end_date)
+                    holidays = attendance_models.Holiday.objects \
+                        .filter(Q(start_date__gte=period_start_date) &
+                                Q(start_date__lte=period_end_date) &
+                                Q(schedule=schedule))
+                    holiday_hours = sum(
+                        list(map(lambda hld: hld.trim_work_hours(period_start_date, period_end_date), holidays)))
+                    representation["schedule_hours"] = schedule_work_hours - holiday_hours / 24 * 8
+                else:
+                    representation["schedule_hours"] = 0
         return representation

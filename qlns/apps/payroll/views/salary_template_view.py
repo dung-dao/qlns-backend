@@ -82,7 +82,10 @@ class SalaryTemplateView(
         try:
             return super(SalaryTemplateView, self).destroy(request, *args, **kwargs)
         except ProtectedError:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data="Denied")
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={"Delete referenced record not allowed"}
+            )
 
     @atomic
     @action(detail=True, methods=['post'])
