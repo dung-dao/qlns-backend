@@ -49,11 +49,6 @@ class EmployeeView(viewsets.GenericViewSet,
         pk = self.get_pk(kwargs)
         employee_pk = self.get_employee_pk()
 
-        if pk != employee_pk:
-            return Response(
-                status=status.HTTP_400_BAD_REQUEST,
-                data={'error': 'NO_EMPLOYEE'})
-
         if employee_pk != pk and \
                 not request.user.has_perm('core.view_employee'):
             return Response(status=status.HTTP_403_FORBIDDEN, data=self.un_authorized)
@@ -66,11 +61,6 @@ class EmployeeView(viewsets.GenericViewSet,
         pk = self.get_pk(kwargs)
         employee_pk = self.get_employee_pk()
 
-        if pk != employee_pk:
-            return Response(
-                status=status.HTTP_400_BAD_REQUEST,
-                data={'error': 'NO_EMPLOYEE'})
-
         if employee_pk != pk and \
                 not request.user.has_perm('core.change_employee'):
             return Response(status=status.HTTP_403_FORBIDDEN, data=self.un_authorized)
@@ -79,11 +69,6 @@ class EmployeeView(viewsets.GenericViewSet,
     def update(self, request, *args, **kwargs):
         pk = self.get_pk(kwargs)
         employee_pk = self.get_employee_pk()
-
-        if pk != employee_pk:
-            return Response(
-                status=status.HTTP_400_BAD_REQUEST,
-                data={'error': 'NO_EMPLOYEE'})
 
         if employee_pk != pk and \
                 not request.user.has_perm('core.change_employee'):
