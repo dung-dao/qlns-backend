@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.permissions import DjangoModelPermissions, SAFE_METHODS
 
 
@@ -15,6 +16,8 @@ class RWPermissionOrViewOwn(DjangoModelPermissions):
     def has_object_permission(self, request, view, obj):
         if not (request.user and request.user.is_authenticated):
             return False
+        if request.user.is_superuser:
+            return True
         if obj.owner.user == request.user and request.method in SAFE_METHODS:
             return True
         else:
@@ -24,7 +27,10 @@ class RWPermissionOrViewOwn(DjangoModelPermissions):
         if not (request.user and request.user.is_authenticated):
             return False
         employee_pk = view.kwargs['employee_pk']
-        editor_pk = request.user.employee.pk if request.user.employee is not None else None
+        try:
+            editor_pk = request.user.employee.pk if request.user.employee is not None else None
+        except ObjectDoesNotExist:
+            return False
 
         if employee_pk == str(editor_pk) and request.method in SAFE_METHODS:
             return True
