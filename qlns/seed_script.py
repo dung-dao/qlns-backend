@@ -54,46 +54,48 @@ def create_month_attendance(employee_id, seed_date):
         attendance.save()
 
         # Morning
-        morning_tracking = attendance_models.Tracking(
-            attendance=attendance,
-            check_in_time=morning_start,
-            check_out_time=morning_end,
+        if morning_start is not None:
+            morning_tracking = attendance_models.Tracking(
+                attendance=attendance,
+                check_in_time=morning_start,
+                check_out_time=morning_end,
 
-            check_in_lat=lat,
-            check_out_lat=lat,
+                check_in_lat=lat,
+                check_out_lat=lat,
 
-            check_in_lng=lng,
-            check_out_lng=lng,
+                check_in_lng=lng,
+                check_out_lng=lng,
 
-            check_in_outside=False,
-            check_out_outside=False,
+                check_in_outside=False,
+                check_out_outside=False,
 
-            location=location,
-        )
-        morning_tracking.save()
-        morning_tracking.is_overtime = morning_tracking.check_overtime()
-        morning_tracking.save()
+                location=location,
+            )
+            morning_tracking.save()
+            morning_tracking.is_overtime = morning_tracking.check_overtime()
+            morning_tracking.save()
 
         # Afternoon
-        morning_tracking = attendance_models.Tracking(
-            attendance=attendance,
-            check_in_time=afternoon_start,
-            check_out_time=afternoon_end,
+        if afternoon_start is not None:
+            morning_tracking = attendance_models.Tracking(
+                attendance=attendance,
+                check_in_time=afternoon_start,
+                check_out_time=afternoon_end,
 
-            check_in_lat=lat,
-            check_out_lat=lat,
+                check_in_lat=lat,
+                check_out_lat=lat,
 
-            check_in_lng=lng,
-            check_out_lng=lng,
+                check_in_lng=lng,
+                check_out_lng=lng,
 
-            check_in_outside=False,
-            check_out_outside=False,
+                check_in_outside=False,
+                check_out_outside=False,
 
-            location=location,
-        )
-        morning_tracking.save()
-        morning_tracking.is_overtime = morning_tracking.check_overtime()
-        morning_tracking.save()
+                location=location,
+            )
+            morning_tracking.save()
+            morning_tracking.is_overtime = morning_tracking.check_overtime()
+            morning_tracking.save()
 
         attendance.calculate_work_hours()
 
