@@ -30,7 +30,7 @@ class RWPermissionOrViewOwn(DjangoModelPermissions):
         try:
             editor_pk = request.user.employee.pk if request.user.employee is not None else None
         except ObjectDoesNotExist:
-            return False
+            return request.user.is_superuser and request.user.is_active
 
         if employee_pk == str(editor_pk) and request.method in SAFE_METHODS:
             return True
