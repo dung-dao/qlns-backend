@@ -7,3 +7,4 @@ class ApplicationConfig(models.Model):
     monthly_start_date = models.IntegerField(default=1)
     ot_point_rate = models.FloatField(default=1.5)
     require_face_id = models.BooleanField(default=False)
+    allow_unrecognised_face = models.BooleanField(default=False)

@@ -1,18 +1,23 @@
 from django.contrib.auth.models import Group, Permission, User
+from django.db.models import Q
 from django.db.transaction import atomic
 from rest_framework import serializers
 
 
 class PermissionSerializer(serializers.ModelSerializer):
+    content_type = serializers.SlugRelatedField('app_label', read_only=True)
+
     class Meta:
         model = Permission
-        fields = ['id', 'name', 'codename']
+        # fields = ['id', 'name', 'codename']
+        fields = '__all__'
 
 
 class PermissionStatusSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     name = serializers.CharField()
     codename = serializers.CharField()
+    content_type = serializers.CharField()
     has_perm = serializers.BooleanField()
 
     def update(self, instance, validated_data):
@@ -25,13 +30,15 @@ class PermissionStatusSerializer(serializers.Serializer):
 class GroupSerializer(serializers.ModelSerializer):
     permissions = PermissionStatusSerializer(many=True)
 
-    all_perm_str_query = "SELECT DISTINCT perm.* FROM auth_permission perm LEFT JOIN qlns.django_content_type " \
-                         "ctt ON perm.content_type_id = ctt.id WHERE NOT ctt.app_label='admin' AND NOT " \
-                         "ctt.app_label='sessions' AND NOT ctt.app_label='contenttypes' AND NOT " \
-                         "ctt.app_label='django_q' ORDER BY perm.id "
-
     def get_all_perms(self):
-        return Permission.objects.raw(self.all_perm_str_query)
+        return Permission.objects.filter(
+            ~Q(content_type__app_label='admin') &
+            ~Q(content_type__app_label='sessions') &
+            ~Q(content_type__app_label='contenttypes') &
+            ~Q(content_type__model='permission') &
+            ~Q(content_type__app_label='django_q')) \
+            .select_related('content_type') \
+            .order_by('id')
 
     def to_representation(self, instance):
         all_permissions = list(self.get_all_perms())
@@ -41,6 +48,7 @@ class GroupSerializer(serializers.ModelSerializer):
             return {'id': perm.id,
                     'name': perm.name,
                     'codename': perm.codename,
+                    'content_type': perm.content_type.name,
                     'has_perm': perm in permissions}
 
         permission_statuses = list(map(map_permission_to_perm_status, all_permissions))

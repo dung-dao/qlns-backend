@@ -28,13 +28,13 @@ class ManageAttendanceView(viewsets.ViewSet):
         start_date = parse_iso_datetime(query_params.get("from_date", None), MIN_UTC_DATETIME)
         end_date = parse_iso_datetime(query_params.get("to_date", None), MAX_UTC_DATETIME)
 
-        query = {
+        context = {
             "start_date": start_date,
             "end_date": end_date,
             "period_id": self.request.query_params.get('period_id', None),
             "request": request
         }
 
-        serializer = EmployeeWithAttendanceSerializer(employee_attendance, many=True, context=query)
+        serializer = EmployeeWithAttendanceSerializer(employee_attendance, many=True, context=context)
 
         return Response(data=serializer.data)

@@ -1,4 +1,5 @@
 from django.contrib.auth.models import Group, Permission
+from django.db.models import Q
 from rest_framework import views
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
@@ -17,13 +18,15 @@ class GroupView(viewsets.ModelViewSet):
 
 
 class PermissionView(viewsets.ReadOnlyModelViewSet):
-    all_perm_str_query = "SELECT DISTINCT perm.* FROM auth_permission perm LEFT JOIN qlns.django_content_type " \
-                         "ctt ON perm.content_type_id = ctt.id WHERE NOT ctt.app_label='admin' AND NOT " \
-                         "ctt.app_label='sessions' AND NOT ctt.app_label='contenttypes' AND NOT ctt.app_label='admin' " \
-                         "AND NOT ctt.app_label='django_q' ORDER BY perm.id "
-
     def get_queryset(self):
-        return Permission.objects.raw(self.all_perm_str_query)
+        return Permission.objects.filter(
+            ~Q(content_type__app_label='admin') &
+            ~Q(content_type__app_label='sessions') &
+            ~Q(content_type__app_label='contenttypes') &
+            ~Q(content_type__model='permission') &
+            ~Q(content_type__app_label='django_q')) \
+            .select_related('content_type') \
+            .order_by('id')
 
     queryset = Permission.objects.all()
     serializer_class = PermissionSerializer
@@ -32,14 +35,17 @@ class PermissionView(viewsets.ReadOnlyModelViewSet):
 class AuthenticatedPermissionView(views.APIView):
     permission_classes = (IsAuthenticated,)
 
-    all_perm_str_query = "SELECT DISTINCT perm.* FROM auth_permission perm LEFT JOIN qlns.django_content_type " \
-                         "ctt ON perm.content_type_id = ctt.id WHERE NOT ctt.app_label='admin' AND NOT " \
-                         "ctt.app_label='sessions' AND NOT ctt.app_label='contenttypes' AND NOT ctt.app_label='admin' " \
-                         "AND NOT ctt.app_label='django_q' ORDER BY perm.id "
-
     def get(self, request, format=None):
-        all_permissions = Permission.objects.raw(self.all_perm_str_query)
         permissions = ()
+        all_permissions = Permission.objects.filter(
+            ~Q(content_type__app_label='admin') &
+            ~Q(content_type__app_label='sessions') &
+            ~Q(content_type__app_label='contenttypes') &
+            ~Q(content_type__model='permission') &
+            ~Q(content_type__app_label='django_q')) \
+            .select_related('content_type') \
+            .order_by('id')
+
         user = request.user
         if user.is_superuser:
             permissions = all_permissions
@@ -50,6 +56,7 @@ class AuthenticatedPermissionView(views.APIView):
             return {'id': perm.id,
                     'name': perm.name,
                     'codename': perm.codename,
+                    'content_type': perm.content_type.name,
                     'has_perm': perm in permissions}
 
         permission_statuses = list(map(map_permission_to_perm_status, all_permissions))

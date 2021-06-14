@@ -19,5 +19,6 @@ class PayslipValue(models.Model):
         # Format currency
         if self.num_value is not None:
             if self.field.datatype == 'Currency':
-                return f'{self.num_value:,}'
+                currency_value = int(self.num_value)
+                return f'{currency_value:,}'
             return str(self.num_value)

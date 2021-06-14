@@ -2,6 +2,7 @@ import formulas
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
+from formulas.errors import FormulaError
 
 from qlns.apps.attendance.models import Attendance, TimeOff, Holiday
 from qlns.apps.core.models import Employee, ApplicationConfig
@@ -293,7 +294,11 @@ class Payroll(models.Model):
                         payslip_value.num_value = value
 
                 elif field.type == SalaryTemplateField.SalaryFieldType.Formula:
-                    formula = formulas.Parser().ast(f'={field.define}')[1].compile()
+                    try:
+                        formula = formulas.Parser().ast(f'={field.define}')[1].compile()
+                    except FormulaError:
+                        raise FormulaError('Invalid formula')
+
                     formula_context = {}
                     inputs = formula.inputs
                     for key in calculation_dict:

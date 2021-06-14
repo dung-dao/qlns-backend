@@ -1,3 +1,5 @@
+import re
+
 from django.db import transaction
 from django.db.models import ProtectedError
 from django.db.transaction import atomic
@@ -86,11 +88,33 @@ class SalaryTemplateView(
     @action(detail=True, methods=['post'])
     def duplicate(self, request, pk=None):
         template = get_object_or_404(SalaryTemplate, pk=pk)
+        template_name = request.data.get('name', None)
+        if template_name is not None:
+            duplicate_template_name = SalaryTemplate.objects.filter(name=template_name).exists()
+            if duplicate_template_name:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data={"error": "Duplicate template name"})
+
         fields = template.fields.all()
 
         template.pk = None
         template.is_default = False
-        template.name = (template.name + " (copy)").strip()
+
+        # New solution
+        if template_name is None:
+            old_name = template.name
+            num = 1
+
+            last_duplicate_template = SalaryTemplate.objects \
+                .filter(name__iregex=fr'{template.name} \([0-9]+\)') \
+                .order_by('-name') \
+                .first()
+
+            if last_duplicate_template is not None:
+                num_str = re.search(r'\([0-9]+\)(?!.*\([0-9]+\))', last_duplicate_template.name).group(0)
+                num = int(num_str.replace('(', '').replace(')', '')) + 1
+            template.name = old_name + f' ({num})'
+        else:
+            template.name = template_name
         template.save()
 
         for field in fields:

@@ -1,6 +1,7 @@
-from qlns.apps.core.models import Employee, Country
-from qlns.apps.authentication.serializers import ProfileUserSerializer
 from rest_framework import serializers
+
+from qlns.apps.authentication.serializers import ProfileUserSerializer
+from qlns.apps.core.models import Employee, Country
 
 
 class CurrentUserSerializer(serializers.ModelSerializer):
@@ -10,15 +11,10 @@ class CurrentUserSerializer(serializers.ModelSerializer):
         queryset=Country.objects.all(),
         allow_null=True, required=False)
     role = serializers.CharField(source="get_role", read_only=True)
-    permissions = serializers.ListField(
-        child=serializers.CharField(max_length=255),
-        source='get_permissions',
-        read_only=True,
-    )
 
     class Meta:
-        fields = '__all__'
         model = Employee
+        exclude = ('face_model_path', 'current_job',)
 
     def create(self, validated_data):
         raise Exception('Create profile not allowed')
