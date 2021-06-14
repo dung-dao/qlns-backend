@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import permissions
 
 
@@ -23,8 +24,15 @@ class DjangoModelPermissionOrIsOwner(permissions.DjangoModelPermissions):
     def has_permission(self, request, view):
         if not (request.user and request.user.is_authenticated):
             return False
+
+        if request.user.is_superuser:
+            return True
+
         employee_pk = view.kwargs['employee_pk']
-        editor_pk = request.user.employee.pk if request.user.employee is not None else None
+        try:
+            editor_pk = request.user.employee.pk if request.user.employee is not None else None
+        except ObjectDoesNotExist:
+            return False
 
         if employee_pk == str(editor_pk):
             return True

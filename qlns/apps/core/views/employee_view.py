@@ -1,4 +1,5 @@
 from django.contrib.auth.models import Group
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.transaction import atomic
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions
@@ -38,23 +39,53 @@ class EmployeeView(viewsets.GenericViewSet,
         "detail": "You do not have permission to perform this action."
     }
 
+    def get_employee_pk(self):
+        try:
+            return str(self.request.user.employee.pk)
+        except ObjectDoesNotExist:
+            return None
+
     def retrieve(self, request, *args, **kwargs):
-        pk = kwargs.get('pk', None)
-        if str(request.user.employee.pk) != pk and \
+        pk = self.get_pk(kwargs)
+        employee_pk = self.get_employee_pk()
+
+        if pk != employee_pk:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={'error': 'NO_EMPLOYEE'})
+
+        if employee_pk != pk and \
                 not request.user.has_perm('core.view_employee'):
             return Response(status=status.HTTP_403_FORBIDDEN, data=self.un_authorized)
         return super(EmployeeView, self).retrieve(request, *args, **kwargs)
 
+    def get_pk(self, kwargs):
+        return kwargs.get('pk', None)
+
     def partial_update(self, request, *args, **kwargs):
-        pk = kwargs.get('pk', None)
-        if str(request.user.employee.pk) != pk and \
+        pk = self.get_pk(kwargs)
+        employee_pk = self.get_employee_pk()
+
+        if pk != employee_pk:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={'error': 'NO_EMPLOYEE'})
+
+        if employee_pk != pk and \
                 not request.user.has_perm('core.change_employee'):
             return Response(status=status.HTTP_403_FORBIDDEN, data=self.un_authorized)
         return super(EmployeeView, self).partial_update(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-        pk = kwargs.get('pk', None)
-        if str(request.user.employee.pk) != pk and \
+        pk = self.get_pk(kwargs)
+        employee_pk = self.get_employee_pk()
+
+        if pk != employee_pk:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={'error': 'NO_EMPLOYEE'})
+
+        if employee_pk != pk and \
                 not request.user.has_perm('core.change_employee'):
             return Response(status=status.HTTP_403_FORBIDDEN, data=self.un_authorized)
         return super(EmployeeView, self).update(request, *args, **kwargs)
