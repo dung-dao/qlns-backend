@@ -38,7 +38,10 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
-        return self.queryset.filter(Q(owner=self.kwargs['employee_pk']))
+        try:
+            return self.queryset.filter(Q(owner=self.kwargs['employee_pk']))
+        except ValueError:
+            return Attendance.objects.none()
 
     def list(self, request, *args, **kwargs):
         start_date = self.request.query_params.get('from_date', None)

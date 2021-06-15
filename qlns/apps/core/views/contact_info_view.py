@@ -12,7 +12,10 @@ class ContactInfoView(viewsets.ViewSet):
     permission_classes = (RWPermissionOrIsOwner,)
 
     def get_queryset(self):
-        return core_models.ContactInfo.objects.filter(owner=self.kwargs['employee_pk'])
+        try:
+            return core_models.ContactInfo.objects.filter(owner=self.kwargs['employee_pk'])
+        except ValueError:
+            return core_models.ContactInfo.objects.none()
 
     def list(self, request, employee_pk=None):
         info = self.get_queryset().first()

@@ -34,7 +34,10 @@ class EmployeeTimeOffView(
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
-        return self.queryset.filter(owner=self.kwargs['employee_pk'])
+        try:
+            return self.queryset.filter(owner=self.kwargs['employee_pk'])
+        except ValueError:
+            return TimeOff.objects.none()
 
     @atomic
     def create(self, request, *args, **kwargs):

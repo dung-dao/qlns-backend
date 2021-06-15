@@ -31,34 +31,53 @@ class AttendanceHelper(APIView):
             .filter(owner=employee) \
             .order_by('-date').first()
 
-        # No attendance
+        # No attendance => Return default
         if attendance is None:
-            return result
+            return Response(data=result)
+
+        # Get data
+        first_clock_in_tracker = attendance.tracking_data \
+            .filter(check_in_time__isnull=False) \
+            .order_by('check_in_time').first()
+
         last_tracker = attendance.tracking_data.order_by('-check_in_time').first()
+
         last_clock_out_tracker = attendance.tracking_data \
             .filter(check_out_time__isnull=False) \
             .order_by('-check_in_time').first()
-        first_tracker = attendance.tracking_data.order_by('check_in_time').first()
 
-        # Blank attendance
+        # Blank attendance => Return default result
         if last_tracker is None:
-            return result
+            return Response(data=result)
 
-        # Last tracking
-        result['first_clock_in'] = first_tracker.check_in_time
-        result['last_clock_out'] = last_clock_out_tracker.check_out_time
+        # Next step
+        if last_tracker.check_out_time is None:
+            result['next_step'] = 'clock out'
+        else:
+            result['next_step'] = 'clock in'
 
+        # First clock in
+        if first_clock_in_tracker is not None:
+            result['first_clock_in'] = first_clock_in_tracker.check_in_time
+        else:
+            result['first_clock_in'] = None
+
+        # Last clock out
+        if last_clock_out_tracker is not None:
+            result['last_clock_out'] = last_clock_out_tracker.check_out_time
+        else:
+            result['last_clock_out'] = None
+
+        # Last action
         result['last_action'] = 'clock out' \
             if last_tracker.check_out_time is not None else 'clock in'
 
         result['last_action_at'] = last_tracker.check_out_time \
             if last_tracker.check_out_time is not None else last_tracker.check_in_time
 
-        if last_tracker.check_out_time is None:
-            result['next_step'] = 'clock out'
-
         # Location
         result["location"] = employee.get_job_location()
 
+        # Return result
         serializer = AttendanceHelperSerializer(instance=result)
         return Response(data=serializer.data)

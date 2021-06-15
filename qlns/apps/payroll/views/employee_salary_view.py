@@ -13,7 +13,10 @@ class EmployeeSalaryView(viewsets.ViewSet):
     permission_classes = (RWPermissionOrViewOwn,)
 
     def get_queryset(self):
-        return EmployeeSalary.objects.filter(owner=self.kwargs['employee_pk'])
+        try:
+            return EmployeeSalary.objects.filter(owner=self.kwargs['employee_pk'])
+        except ValueError:
+            return EmployeeSalary.objects.none()
 
     def list(self, request, employee_pk=None):
         salary_config = self.get_queryset().first()
