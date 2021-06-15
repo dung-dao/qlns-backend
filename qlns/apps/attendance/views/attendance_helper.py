@@ -22,6 +22,9 @@ class AttendanceHelper(APIView):
 
         try:
             employee = getattr(request.user, 'employee')
+
+            # Location
+            result["location"] = employee.get_job_location()
         except ObjectDoesNotExist:
             result['next_step'] = None
             serializer = AttendanceHelperSerializer(instance=result)
@@ -74,9 +77,6 @@ class AttendanceHelper(APIView):
 
         result['last_action_at'] = last_tracker.check_out_time \
             if last_tracker.check_out_time is not None else last_tracker.check_in_time
-
-        # Location
-        result["location"] = employee.get_job_location()
 
         # Return result
         serializer = AttendanceHelperSerializer(instance=result)
