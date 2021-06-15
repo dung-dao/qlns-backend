@@ -51,7 +51,11 @@ class PayrollView(
         if serializer.is_valid():
             serializer.save()
             payroll = serializer.instance
-            payroll.calculate_salary()
+
+            try:
+                payroll.calculate_salary()
+            except FormulaError:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data="Invalid template")
             return Response(data=serializer.data)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
