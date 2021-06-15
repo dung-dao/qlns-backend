@@ -33,7 +33,7 @@ class AttendanceHelper(APIView):
 
         # No attendance
         if attendance is None:
-            return result
+            return Response(data=result)
         last_tracker = attendance.tracking_data.order_by('-check_in_time').first()
         last_clock_out_tracker = attendance.tracking_data \
             .filter(check_out_time__isnull=False) \
@@ -42,7 +42,7 @@ class AttendanceHelper(APIView):
 
         # Blank attendance
         if last_tracker is None:
-            return result
+            return Response(data=result)
 
         # Last tracking
         result['first_clock_in'] = first_tracker.check_in_time
