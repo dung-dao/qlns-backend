@@ -11,7 +11,10 @@ class EmployeeScheduleView(viewsets.ViewSet):
     permission_classes = (RWPermissionOrViewOwn,)
 
     def get_queryset(self):
-        return EmployeeSchedule.objects.filter(owner=self.kwargs['employee_pk'])
+        try:
+            return EmployeeSchedule.objects.filter(owner=self.kwargs['employee_pk'])
+        except ValueError:
+            return EmployeeSchedule.objects.none()
 
     def list(self, request, employee_pk=None):
         schedule = self.get_queryset().first()

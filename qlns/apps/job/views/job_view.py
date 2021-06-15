@@ -31,9 +31,12 @@ class JobView(viewsets.GenericViewSet,
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
-        return job_models.Job.objects \
-            .filter(owner=self.kwargs['employee_pk']) \
-            .order_by('-timestamp')
+        try:
+            return job_models.Job.objects \
+                .filter(owner=self.kwargs['employee_pk']) \
+                .order_by('-timestamp')
+        except ValueError:
+            return job_models.Job.objects.none()
 
     @atomic
     def create(self, request, *args, **kwargs):
