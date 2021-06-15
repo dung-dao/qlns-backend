@@ -100,7 +100,6 @@ class SalaryTemplateView(
         fields = template.fields.all()
 
         template.pk = None
-        template.is_default = False
 
         # New solution
         if template_name is None:
