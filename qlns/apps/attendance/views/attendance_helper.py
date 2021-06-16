@@ -46,7 +46,8 @@ class AttendanceHelper(APIView):
 
         # No attendance => Return default
         if attendance is None:
-            return Response(data=result)
+            serializer = AttendanceHelperSerializer(instance=result)
+            return Response(data=serializer.data)
 
         # Get data
         first_clock_in_tracker = attendance.tracking_data \
@@ -61,7 +62,8 @@ class AttendanceHelper(APIView):
 
         # Blank attendance => Return default result
         if last_tracker is None:
-            return Response(data=result)
+            serializer = AttendanceHelperSerializer(instance=result)
+            return Response(data=serializer.data)
 
         # Next step
         if last_tracker.check_out_time is None:
