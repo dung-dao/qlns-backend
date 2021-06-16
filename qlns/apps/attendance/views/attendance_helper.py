@@ -1,10 +1,12 @@
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from qlns.apps.attendance.models import Attendance
 from qlns.apps.attendance.serializers.attendance.attendance_helper_serializer import AttendanceHelperSerializer
+from qlns.utils.datetime_utils import local_now
 
 
 class AttendanceHelper(APIView):
@@ -30,9 +32,17 @@ class AttendanceHelper(APIView):
             serializer = AttendanceHelperSerializer(instance=result)
             return Response(data=serializer.data)
 
+        # Get today attendance
+        today = local_now()
+        today_start = today.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = today.replace(hour=23, minute=59, second=59, microsecond=999999)
+
         attendance = Attendance.objects \
-            .filter(owner=employee) \
-            .order_by('-date').first()
+            .filter(Q(date__gte=today_start) &
+                    Q(date__lte=today_end) &
+                    Q(owner=employee)) \
+            .order_by('-date') \
+            .first()
 
         # No attendance => Return default
         if attendance is None:
