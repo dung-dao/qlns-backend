@@ -171,7 +171,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
 
             img_width, img_height = resized_image.size
             max_size = max(img_width, img_height)
-            ratio = 1024 / max_size
+            ratio = 640 / max_size
             resized_image = resized_image.resize((int(img_width * ratio), int(img_height * ratio)), PIL.Image.NEAREST)
         return resized_image
 

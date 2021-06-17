@@ -118,7 +118,7 @@ class Employee(models.Model):
             return False
 
         pic = np.array(image.convert('RGB'))
-        faces = face_recognition.face_locations(pic)
+        faces = face_recognition.face_locations(pic, model='cnn')
 
         if len(faces) != 1:
             return False
