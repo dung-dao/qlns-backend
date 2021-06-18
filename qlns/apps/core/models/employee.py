@@ -118,13 +118,19 @@ class Employee(models.Model):
             return False
 
         pic = np.array(image.convert('RGB'))
-        faces = face_recognition.face_locations(pic, model='cnn')
+        faces = face_recognition.face_locations(pic)
 
         if len(faces) != 1:
             return False
-        unknown_face_enc = face_recognition.face_encodings(pic)[0]
+        try:
+            unknown_face_enc = face_recognition.face_encodings(pic, faces, model='large')[0]
+        except IndexError:
+            return False
+
         employee_face_enc = pickle.load(open(self.face_model_path, 'rb'))
-        return face_recognition.compare_faces([employee_face_enc], unknown_face_enc, tolerance=0.4)[0]
+        res = face_recognition.face_distance([employee_face_enc], unknown_face_enc)[0]
+        print(f"face distance: {res}")
+        return res <= 0.4
 
     def update_face_model(self):
         if self.avatar == self.avatar.field.default:
