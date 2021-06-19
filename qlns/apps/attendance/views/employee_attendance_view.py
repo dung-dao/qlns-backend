@@ -1,5 +1,6 @@
 import PIL
 from PIL import Image
+from django.conf import settings
 from django.db.models import Q
 from django.db.transaction import atomic
 from django.shortcuts import get_object_or_404
@@ -106,17 +107,16 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         face_id_required = getattr(app_config, 'require_face_id', False)
         allow_unrecognised_face = getattr(app_config, 'allow_unrecognised_face', False)
         face_img = request.data.get('face_image', None)
-        resized_image = self.scale_image(face_img)
 
         # No profile picture exception
-        if face_id_required and employee.face_model_path is None:
+        if face_id_required and employee.avatar.path == f'{settings.BASE_DIR}/avatars/default_avatar.svg':
             return Response(status=status.HTTP_400_BAD_REQUEST, data='Face identity not available')
 
         if face_img is None and face_id_required:
             return Response(status=status.HTTP_400_BAD_REQUEST, data='face_image required')
 
         if face_id_required:
-            face_authorized = employee.identify_image(resized_image)
+            face_authorized = employee.identify_image(face_img.file.read())
             if not face_authorized and not allow_unrecognised_face:
                 return Response(status=status.HTTP_400_BAD_REQUEST, data='Face recognition failed')
             if not face_authorized and allow_unrecognised_face and check_in_note is None:
@@ -213,14 +213,15 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         allow_unrecognised_face = getattr(app_config, 'allow_unrecognised_face', False)
         face_img = request.data.get('face_image', None)
 
+        # No profile picture exception
+        if require_face_id and employee.avatar.path == f'{settings.BASE_DIR}/avatars/default_avatar.svg':
+            return Response(status=status.HTTP_400_BAD_REQUEST, data='Face identity not available')
+
         if face_img is None and require_face_id:
             return Response(status=status.HTTP_400_BAD_REQUEST, data='face_image required')
 
-        # Resize image
-        resized_image = self.scale_image(face_img)
-
         if require_face_id:
-            face_authorized = employee.identify_image(resized_image)
+            face_authorized = employee.identify_image(face_img.file.read())
             if not face_authorized and not allow_unrecognised_face:
                 return Response(status=status.HTTP_400_BAD_REQUEST, data='Face recognition failed')
             if not face_authorized and allow_unrecognised_face and check_out_note is None:

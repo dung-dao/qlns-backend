@@ -187,5 +187,5 @@ sentry_sdk.init(
     send_default_pii=True
 )
 
-COGNITIVE_END_POINT = "https://face-ea-instance.cognitiveservices.azure.com/face/v1.0/"
+COGNITIVE_END_POINT = "https://face-ea-instance.cognitiveservices.azure.com/face/v1.0"
 COGNITIVE_API_KEY = "e54715220c0840ce8b8491f73c0b4b62"

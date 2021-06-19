@@ -1,10 +1,13 @@
+import json
+
 from django.contrib.auth.models import Group, Permission
 from django.db.models import Q
-from rest_framework import views
+from rest_framework import views, status
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.response import Response
 
+from qlns.apps.attendance.services.face_services import detect_faces
 from qlns.apps.authentication.serializers import GroupSerializer, PermissionSerializer, PermissionStatusSerializer
 
 
@@ -62,3 +65,17 @@ class AuthenticatedPermissionView(views.APIView):
         permission_statuses = list(map(map_permission_to_perm_status, all_permissions))
         serializer = PermissionStatusSerializer(instance=permission_statuses, many=True)
         return Response(data=serializer.data)
+
+
+class FaceRecognitionView(views.APIView):
+    def post(self, request, format=None):
+        image = request.data.get('image', None)
+        if image is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        image = image.file.read()
+        faces = detect_faces(image)
+        if faces is not None:
+            return Response(data=faces)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)

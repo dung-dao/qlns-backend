@@ -17,7 +17,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Employee
-        exclude = ('current_job', 'face_model_path', 'recognition_id')
+        exclude = ('current_job', 'recognition_id')
 
     def create(self, validated_data):
         # Create user
