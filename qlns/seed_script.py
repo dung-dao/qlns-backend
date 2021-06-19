@@ -1,8 +1,11 @@
 # Script to load data for testing purpose only
+from django.conf import settings
 from django.utils import timezone
 
 from qlns.apps.attendance import models as attendance_models
+from qlns.apps.attendance.services.face_services import create_person, add_recognition_image
 from qlns.apps.core import models as core_models
+from qlns.apps.core.models import Employee
 from qlns.utils.constants import MAX_UTC_DATETIME
 from qlns.utils.datetime_utils import get_next_date
 
@@ -101,3 +104,14 @@ def create_month_attendance(employee_id, seed_date):
 
         print(morning_start, morning_end, afternoon_start, afternoon_end)
         i_date = get_next_date(i_date)
+
+
+def fit_employee_face_model():
+    ems = Employee.objects.all()
+    for employee in ems:
+        person_id_none = employee.recognition_id is None
+        person_id = create_person(employee.full_name)
+
+        has_default_avatar = employee.avatar.path != f'{settings.BASE_DIR}/avatars/default_avatar.svg'
+        if person_id_none:
+            add_recognition_image(person_id, employee.avatar.file.read())

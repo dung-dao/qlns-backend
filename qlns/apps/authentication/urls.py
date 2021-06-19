@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework_simplejwt import views as jwt_views
 from rest_framework.routers import DefaultRouter
-from .views import GroupView, PermissionView, AuthenticatedPermissionView
+from .views import GroupView, PermissionView, AuthenticatedPermissionView, FaceRecognitionView
 
 router = DefaultRouter()
 router.register(r'roles', GroupView, basename='role')
@@ -14,4 +14,5 @@ urlpatterns = [
          name='token_refresh'),
     path('', include(router.urls)),
     path('authenticated_permissions/', AuthenticatedPermissionView.as_view()),
+    path('detect_faces/', FaceRecognitionView.as_view()),
 ]

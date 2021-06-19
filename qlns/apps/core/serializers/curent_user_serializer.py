@@ -15,7 +15,7 @@ class CurrentUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Employee
-        exclude = ('face_model_path', 'current_job',)
+        exclude = ('current_job',)
 
     def create(self, validated_data):
         raise Exception('Create profile not allowed')

@@ -8,8 +8,9 @@ from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from qlns.apps.attendance.services.face_services import create_person, add_recognition_image
 from qlns.apps.authentication.permissions import CRUDPermission
-from qlns.apps.core.models import Employee
+from qlns.apps.core.models import Employee, ApplicationConfig
 from qlns.apps.core.serializers import EmployeeSerializer
 
 
@@ -107,6 +108,9 @@ class EmployeeView(viewsets.GenericViewSet,
     @atomic
     @action(methods=['post'], detail=True, url_path='avatar')
     def change_avatar(self, request, pk):
+        config = ApplicationConfig.objects.first()
+        enable_face_id = getattr(config, 'require_face_id', False)
+
         perm = self.get_action_perm()
         if not request.user.has_perm(perm):
             return Response(status=status.HTTP_403_FORBIDDEN, data=self.un_authorized)
@@ -114,9 +118,21 @@ class EmployeeView(viewsets.GenericViewSet,
         if 'avatar' not in request.data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         employee = get_object_or_404(Employee, pk=pk)
+
+        # Create image store if not available
+        if employee.recognition_id is None:
+            person_id = create_person(employee.full_name)
+            if person_id is not None:
+                employee.recognition_id = person_id
+                employee.save()
+
+        image = request.data.get('avatar', None)
+
+        if image is not None:
+            res = add_recognition_image(employee.recognition_id, image.file.read())
+            if not res and enable_face_id:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
         employee.avatar = request.data['avatar']
         employee.save()
-
-        employee.update_face_model()
-
         return Response()

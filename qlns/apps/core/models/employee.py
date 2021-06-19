@@ -1,13 +1,11 @@
 import os
-import pickle
 import uuid
 
-import face_recognition
-import numpy as np
 from django.contrib.auth.models import User
 from django.db import models
 
 from ...attendance.models import EmployeeSchedule
+from ...attendance.services.face_services import verify
 
 
 def upload_to(instance, filename):
@@ -60,7 +58,7 @@ class Employee(models.Model):
     avatar = models.ImageField(
         upload_to=upload_to, default='avatars/default_avatar.svg')
 
-    face_model_path = models.CharField(max_length=1000, null=True)
+    recognition_id = models.CharField(max_length=100, null=True)
 
     # related data
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee')
@@ -114,37 +112,4 @@ class Employee(models.Model):
             return "NewHired"
 
     def identify_image(self, image):
-        if self.face_model_path is None:
-            return False
-
-        pic = np.array(image.convert('RGB'))
-        faces = face_recognition.face_locations(pic)
-
-        if len(faces) != 1:
-            return False
-        try:
-            unknown_face_enc = face_recognition.face_encodings(pic, faces, model='large')[0]
-        except IndexError:
-            return False
-
-        employee_face_enc = pickle.load(open(self.face_model_path, 'rb'))
-        res = face_recognition.face_distance([employee_face_enc], unknown_face_enc)[0]
-        print(f"face distance: {res}")
-        return res <= 0.4
-
-    def update_face_model(self):
-        if self.avatar == self.avatar.field.default:
-            return
-
-        img_path = self.avatar.path
-        face_img = face_recognition.load_image_file(img_path)
-        faces = face_recognition.face_locations(face_img)
-        if len(faces) != 1:
-            return
-
-        face_enc = face_recognition.face_encodings(face_img)[0]
-        filename = self.face_model_path if self.face_model_path is not None \
-            else './private_files/trained_models/' + str(uuid.uuid4()) + '.sav'
-        pickle.dump(face_enc, open(filename, 'wb'))
-        self.face_model_path = filename
-        self.save()
+        return verify(self.recognition_id, image)
