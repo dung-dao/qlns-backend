@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
+from qlns.apps.attendance.services.face_services import create_person
 from qlns.apps.authentication.serializers import UserSerializer
 from qlns.apps.core.models import Employee, Country
 
@@ -16,7 +17,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Employee
-        exclude = ('current_job', 'face_model_path',)
+        exclude = ('current_job', 'face_model_path', 'recognition_id')
 
     def create(self, validated_data):
         # Create user
@@ -34,6 +35,12 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
         # Associate
         employee.user = user
+
+        employee.save()
+
+        # Create recognition person
+        person_id = create_person(employee.full_name)
+        employee.recognition_id = person_id
 
         employee.save()
         return employee

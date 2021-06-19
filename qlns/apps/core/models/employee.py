@@ -61,6 +61,7 @@ class Employee(models.Model):
         upload_to=upload_to, default='avatars/default_avatar.svg')
 
     face_model_path = models.CharField(max_length=1000, null=True)
+    recognition_id = models.CharField(max_length=100, null=True)
 
     # related data
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee')
