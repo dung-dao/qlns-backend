@@ -21,3 +21,4 @@ class SalaryTemplateField(models.Model):
     code_name = models.CharField(max_length=255)
     display_name = models.CharField(max_length=255)
     define = models.CharField(max_length=1024, null=True, blank=True)
+    is_visible = models.BooleanField(default=True)
