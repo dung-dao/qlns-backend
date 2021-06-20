@@ -98,7 +98,7 @@ class PayrollView(
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         # Headers
-        fields = list(payroll.template.fields.all())
+        fields = list(payroll.template.fields.filter(is_visible=True).order_by('index'))
         column_names = list(map(lambda e: e.display_name, fields))
 
         column_width = list(map(lambda s: len(s), column_names))
@@ -172,7 +172,7 @@ class PayrollView(
         # Write data rows
         i_row = 4
         for payslip in payslips:
-            values = payslip.values.all().order_by('field__index')
+            values = payslip.values.filter(field__is_visible=True).order_by('field__index')
             for i_val in range(values.count()):
                 value = None
                 cell_style = None
@@ -231,9 +231,10 @@ class PayrollView(
                     'value': value if e.field.datatype != "Currency" else str(f'{int(e.num_value):,}') + ' ₫'
                 }
 
-            values = list(map(
-                map_value,
-                payslip.values.select_related('field').all().order_by('field__index')))
+            _payslip_values = payslip.values.select_related('field') \
+                .filter(field__is_visible=True) \
+                .order_by('field__index')
+            values = list(map(map_value, _payslip_values))
 
             payroll_name = f'Thông báo thông tin bảng lương {payroll.period.start_date.month}/{payroll.period.start_date.year}'
             payslip_name = f'Phiếu lương {payroll.period.start_date.month}/{payroll.period.start_date.year}'
