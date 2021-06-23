@@ -67,6 +67,8 @@ class SalaryTemplateSerializer(serializers.ModelSerializer):
                     test_calculation_dict[field['code_name']] = 'a'
                 elif field['datatype'] in ['Number', 'Currency', ]:
                     test_calculation_dict[field['code_name']] = 7
+                else:
+                    raise Exception("Unhandled")
             elif field['type'] == 'Formula':
                 try:
                     formula = formulas.Parser().ast(f'={field["define"]}')[1].compile()
@@ -98,4 +100,13 @@ class SalaryTemplateSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError(f'Invalid $datatype$ at <{field["code_name"]}> : {str(e)}')
                 except DispatcherError:
                     raise serializers.ValidationError(f'$Undefined function$ at <{field["code_name"]}>')
+            elif field['type'] == 'Input':
+                if field['datatype'] == 'Text':
+                    test_calculation_dict[field['code_name']] = 'a'
+                elif field['datatype'] in ['Number', 'Currency', ]:
+                    test_calculation_dict[field['code_name']] = 7
+                else:
+                    raise Exception("Unhandled")
+            else:
+                raise Exception("Unhandled")
         return attrs

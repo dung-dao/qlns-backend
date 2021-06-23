@@ -4,7 +4,7 @@ import math
 import xlsxwriter
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
-from django.db.transaction import atomic
+from django.db.transaction import atomic, set_rollback
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
@@ -18,6 +18,7 @@ from rest_framework.response import Response
 from qlns.apps.attendance.models import Period
 from qlns.apps.authentication.permissions import ActionPermission
 from qlns.apps.payroll.models import Payroll
+from qlns.apps.payroll.models.payroll import InputFileError
 from qlns.apps.payroll.serializers.payroll_serializer import PayrollSerializer
 from qlns.utils.datetime_utils import to_date_string
 
@@ -37,6 +38,7 @@ class PayrollView(
             permission_classes = (permissions.DjangoModelPermissions,)
         elif self.action in ('calculate', 'export_excel', 'send_payslip', 'confirm',):
             permission_classes = (ActionPermission,)
+
         return [permission() for permission in permission_classes]
 
     def create(self, request, *args, **kwargs):
@@ -92,6 +94,152 @@ class PayrollView(
         return Response()
 
     @action(detail=True, methods=['get'])
+    def inputs_template(self, request, pk):
+        user = request.user
+        has_perm = user.has_perm('payroll.view_payroll')
+        if not has_perm:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+        payroll = get_object_or_404(Payroll, pk=pk)
+        if payroll.status == Payroll.Status.Confirmed:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="Cannot modify confirmed payroll")
+
+        fields = list(payroll.template.fields
+                      .filter(type='Input')
+                      .order_by('index'))
+        column_names = list(map(lambda e: e.display_name, fields))
+        column_width = list(map(lambda s: len(s), column_names))
+
+        # Inject employee fields
+        column_names.insert(0, "Id")
+        column_names.insert(1, "Họ tên")
+
+        column_width.insert(0, len("EmployeeId") + 4)
+        column_width.insert(1, len("Fullname") + 4)
+
+        # Create workbook
+        payroll_name = payroll.name
+        for sp in ['\\', '/', '*', '[', ']', ':', '?']:
+            payroll_name = payroll_name.replace(sp, ' ').strip()
+
+        payroll_name = "Dữ liệu bổ sung"
+        output = io.BytesIO()
+        wb = xlsxwriter.Workbook(output)
+
+        worksheet = wb.add_worksheet(payroll_name)
+
+        # Styles
+        header_style = wb.add_format(
+            {
+                'bold': True,
+                'font_size': 13,
+                'align': 'center',
+                'border': 1,
+                'bg_color': '#f2f2f2',
+            }
+        )
+
+        normal_style = wb.add_format(
+            {
+                'font_size': 13,
+                'bold': False,
+            }
+        )
+
+        no_border_cell_style = wb.add_format(
+            {
+                'font_size': 13,
+                'bold': False,
+                'border': 0,
+            }
+        )
+
+        title_style = wb.add_format(
+            {
+                'font_size': 16,
+                'bold': True,
+            }
+        )
+
+        normal_cell_style = wb.add_format(
+            {
+                'font_size': 13,
+                'bold': False,
+                'border': 1,
+            }
+        )
+
+        currency_cell_style = wb.add_format(
+            {
+                'num_format': '#,##0₫',
+                'font_size': 13,
+                'bold': False,
+                'border': 1,
+            }
+        )
+
+        locked = wb.add_format()
+        locked.set_locked(True)
+
+        # Write title
+        worksheet.write(0, 0, payroll_name, title_style)
+        worksheet.set_row(0, 24)
+
+        # Write headers
+        for col in range(len(column_names)):
+            worksheet.write(3, col, column_names[col], header_style)
+
+        worksheet.write(1, 0,
+                        f"Chu kỳ lương: {to_date_string(payroll.period.start_date)} - {to_date_string(payroll.period.end_date)}")
+
+        # Write data rows
+        i_row = 4
+        employees = payroll.get_payroll_employees()
+        for em_index in range(len(employees)):
+            employee = employees[em_index]
+            worksheet.write(i_row + em_index, 0, employee.pk, no_border_cell_style)
+            worksheet.write(i_row + em_index, 1, employee.full_name, no_border_cell_style)
+
+        # Response
+        wb.close()
+        output.seek(0)
+        filename = payroll_name
+        response = HttpResponse(
+            output,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename=%s.xlsx' % filename
+
+        return response
+
+    @atomic
+    @action(detail=True, methods=['post'])
+    def upload_inputs(self, request, pk):
+        user = request.user
+        has_perm = user.has_perm('payroll.change_payroll') or user.has_perm('payroll.add_payroll')
+        if not has_perm:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        payroll = get_object_or_404(Payroll, pk=pk)
+        if payroll.status == Payroll.Status.Confirmed:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="Cannot modify confirmed payroll")
+
+        if not payroll.is_inputs_file_required():
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="No input field")
+
+        file = request.data.get('input_file', None)
+        if file is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data="input_file required!")
+
+        payroll.input_file = file
+        payroll.save()
+        try:
+            payroll.calculate_salary()
+        except InputFileError:
+            set_rollback(True)
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={"error": "Data error in excel file"})
+        return Response()
+
+    @action(detail=True, methods=['get'])
     def export_excel(self, request, pk):
         payroll = Payroll.objects.filter(pk=pk).prefetch_related('payslips').first()
         if payroll is None:
@@ -100,7 +248,6 @@ class PayrollView(
         # Headers
         fields = list(payroll.template.fields.filter(is_visible=True).order_by('index'))
         column_names = list(map(lambda e: e.display_name, fields))
-
         column_width = list(map(lambda s: len(s), column_names))
 
         # Prepare data
