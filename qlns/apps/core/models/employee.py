@@ -113,3 +113,6 @@ class Employee(models.Model):
 
     def identify_image(self, image):
         return verify(self.recognition_id, image)
+
+    def get_username(self):
+        return self.user.username

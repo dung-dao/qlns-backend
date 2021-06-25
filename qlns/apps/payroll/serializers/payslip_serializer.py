@@ -1,10 +1,12 @@
 from rest_framework import serializers
 
+from qlns.apps.core.serializers.public_employee_serializer import PublicEmployeeSerializer
 from qlns.apps.payroll.models import Payslip
 from qlns.apps.payroll.serializers.payslip_value import PayslipValueSerializer
 
 
 class PayslipSerializer(serializers.ModelSerializer):
+    owner = PublicEmployeeSerializer()
     values = serializers.SerializerMethodField()
 
     class Meta:
