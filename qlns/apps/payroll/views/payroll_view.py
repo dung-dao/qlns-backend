@@ -108,14 +108,15 @@ class PayrollView(
                       .filter(type='Input')
                       .order_by('index'))
         column_names = list(map(lambda e: e.display_name, fields))
-        column_width = list(map(lambda s: len(s), column_names))
+        column_width = list(map(lambda s: len(s) + 4, column_names))
 
         # Inject employee fields
         column_names.insert(0, "Id")
         column_names.insert(1, "Họ tên")
 
-        column_width.insert(0, len("EmployeeId") + 4)
-        column_width.insert(1, len("Fullname") + 4)
+        column_width.insert(0, len("Id"))
+        column_width.insert(1, len("Họ tên"))
+
 
         # Create workbook
         payroll_name = payroll.name
@@ -199,6 +200,19 @@ class PayrollView(
             employee = employees[em_index]
             worksheet.write(i_row + em_index, 0, employee.pk, no_border_cell_style)
             worksheet.write(i_row + em_index, 1, employee.full_name, no_border_cell_style)
+
+            # if the length of the cell's content is wider than the current column width, widen the column width
+
+            # because only two columns (0:employee.pk, 1:employee.full_name) have content, we only 
+            # need to take care of them, cause this is an "input TEMPLATE", the other columns are all empty already
+            if len(str(employee.pk)) > column_width[0]:
+                column_width[0] = len(str(employee.pk))
+            if len(str(employee.full_name)) > column_width[1]:
+                column_width[1] = len(str(employee.full_name))
+
+        # We have built the "column_width" dictionary, now using it to actually set the width of the columns
+        for col in range(len(column_names)):
+            worksheet.set_column(col, col, column_width[col] + 4)
 
         # Response
         wb.close()
