@@ -1,4 +1,8 @@
+import os
+import uuid
+
 import formulas
+import openpyxl
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
@@ -12,6 +16,15 @@ from qlns.apps.payroll.models.payroll_utils import PIT_VN
 from qlns.apps.payroll.models.payslip import Payslip
 from qlns.utils.constants import MIN_UTC_DATETIME
 from qlns.utils.datetime_utils import to_date_string
+
+
+def upload_to(instance, filename):
+    _, file_extension = os.path.splitext('/' + filename)
+    return 'payroll/input_files/' + str(uuid.uuid4()) + file_extension
+
+
+class InputFileError(Exception):
+    pass
 
 
 class Payroll(models.Model):
@@ -34,6 +47,11 @@ class Payroll(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=50, choices=Status.choices, default=Status.Temporary)
     confirmed_by = models.ForeignKey(to='core.Employee', on_delete=models.SET_NULL, null=True)
+
+    input_file = models.FileField(null=True, upload_to=upload_to)
+
+    def is_inputs_file_required(self):
+        return self.template.fields.filter(type='Input').exists()
 
     @staticmethod
     def get_employee_info(employee):
@@ -232,26 +250,17 @@ class Payroll(models.Model):
         # Get templates
         template = self.template
         template_fields = template.fields.order_by('index')
+        input_fields = template.fields.filter(type='INPUT').order_by('index')
 
-        # Filter employees and load related data
-        employees = Employee.objects \
-            .filter(Q(salary_info__isnull=False) &
-                    Q(employee_schedule__isnull=False)) \
-            .filter(current_job__isnull=False) \
-            .distinct()
-
-        employee_query = "SELECT DISTINCT employee.* FROM core_employee employee left join payroll_employeesalary " \
-                         "em_salary ON em_salary.owner_id = employee.id left JOIN attendance_employeeschedule " \
-                         "em_schedule ON em_schedule.owner_id = employee.id left join job_job job on " \
-                         "employee.current_job_id = job.id left join job_termination termination on " \
-                         "termination.job_id = job.id WHERE NOT ISNULL(em_salary.id) AND NOT ISNULL(em_schedule.id) " \
-                         "AND (ISNULL(termination.`date`) OR termination.`date` > %s)".strip()
-        employees = Employee.objects.raw(employee_query, [self.period.start_date.isoformat()])
+        employees = self.get_payroll_employees()
 
         self.payslips.all().delete()
         self.save()
 
-        for employee in employees:
+        employee_input_list = self.get_all_employee_input(employees, input_fields)
+
+        for index in range(len(employees)):
+            employee = employees[index]
             # Create payslip
             payslip = Payslip(owner=employee, payroll=self)
             payslip.save()
@@ -264,6 +273,8 @@ class Payroll(models.Model):
                                               self.period.start_date,
                                               self.period.end_date)
 
+            inputs = employee_input_list[index]
+
             calculation_dict = {
                 "payroll_start_date": self.period.start_date,
                 "payroll_end_date": self.period.end_date,
@@ -271,6 +282,8 @@ class Payroll(models.Model):
                 **job_info,
                 **salary_info,
                 **work_info,
+
+                **inputs,
             }
 
             functions = formulas.get_functions()
@@ -282,17 +295,29 @@ class Payroll(models.Model):
                     payslip=payslip,
                     field=field
                 )
-
+                # Create system field value for payslip
                 if field.type == SalaryTemplateField.SalaryFieldType.SystemField:
                     value = calculation_dict[field.code_name]
 
-                    # Set value based on defined datatype
                     if field.datatype == SalaryTemplateField.Datatype.Text:
                         payslip_value.str_value = value
                     elif field.datatype == SalaryTemplateField.Datatype.Number or \
                             field.datatype == SalaryTemplateField.Datatype.Currency:
                         payslip_value.num_value = value
 
+                # Create input field value for payslip
+                elif field.type == SalaryTemplateField.SalaryFieldType.Input:
+                    default_value = 0 \
+                        if field.datatype in ('Number', 'Currency',) else ''
+                    value = calculation_dict.get(field.code_name, default_value)
+
+                    if field.datatype == SalaryTemplateField.Datatype.Text:
+                        payslip_value.str_value = value
+                    elif field.datatype == SalaryTemplateField.Datatype.Number or \
+                            field.datatype == SalaryTemplateField.Datatype.Currency:
+                        payslip_value.num_value = value
+
+                # Create formula field value for payslip
                 elif field.type == SalaryTemplateField.SalaryFieldType.Formula:
                     try:
                         formula = formulas.Parser().ast(f'={field.define}')[1].compile()
@@ -323,3 +348,54 @@ class Payroll(models.Model):
                     except Exception:
                         raise Exception
                 payslip_value.save()
+
+    def get_payroll_employees(self):
+        # Filter employees and load related data
+        employee_query = "SELECT DISTINCT employee.* FROM core_employee employee left join payroll_employeesalary " \
+                         "em_salary ON em_salary.owner_id = employee.id left JOIN attendance_employeeschedule " \
+                         "em_schedule ON em_schedule.owner_id = employee.id left join job_job job on " \
+                         "employee.current_job_id = job.id left join job_termination termination on " \
+                         "termination.job_id = job.id WHERE NOT ISNULL(em_salary.id) AND NOT ISNULL(em_schedule.id) " \
+                         "AND (ISNULL(termination.`date`) OR termination.`date` > %s)".strip()
+        employees = Employee.objects.raw(employee_query, [self.period.start_date.isoformat()])
+        return employees
+
+    def get_all_employee_input(self, employees, fields=[]):
+        input_lists = []
+        try:
+            wb = openpyxl.load_workbook(self.input_file, data_only=True)
+        except ValueError:
+            wb = None
+        worksheet = wb.active if wb is not None else None
+
+        # Data read offset
+        row_offset = 5
+        col_offset = 2
+
+        fields_indxs = range(len(fields))
+        for employee_indx in range(len(employees)):
+            calculation_dict = {}
+
+            for field_indx in fields_indxs:
+                field = fields[field_indx]
+
+                cell_key = f'{chr(col_offset + field_indx + 65)}{employee_indx + row_offset}'
+
+                default_value = 0 \
+                    if field.datatype in ('Number', 'Currency',) else ''
+                value = worksheet[cell_key].value if worksheet is not None else default_value
+
+                # parse
+                try:
+                    if field.datatype in ('Number', 'Currency',):
+                        value = float(value) if value is not None else 0
+                    elif field.datatype in ['Text']:
+                        value = str(value) if value is not None else ''
+                except ValueError:
+                    raise InputFileError
+
+                calculation_dict[field.code_name] = value if value is not None else 0
+
+            input_lists.append(calculation_dict)
+
+        return input_lists

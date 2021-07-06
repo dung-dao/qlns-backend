@@ -13,6 +13,7 @@ class SalaryTemplateField(models.Model):
     class SalaryFieldType(models.TextChoices):
         SystemField = 'System Field'
         Formula = 'Formula'
+        Input = 'Input'
 
     template = models.ForeignKey(to='SalaryTemplate', on_delete=models.CASCADE, related_name='fields')
     index = models.IntegerField()
