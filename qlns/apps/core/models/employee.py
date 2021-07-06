@@ -75,7 +75,7 @@ class Employee(models.Model):
         if g is not None:
             return g.name.upper()
         else:
-            return "N/A"
+            return "USER"
 
     def get_permissions(self):
         permissions = self.user.get_all_permissions()
