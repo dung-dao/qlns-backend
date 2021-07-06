@@ -53,6 +53,7 @@ class EmployeeAttendanceView(viewsets.GenericViewSet, mixins.ListModelMixin):
         end_date = parse_iso_datetime(end_date, MAX_UTC_DATETIME)
 
         attendance_data = self.get_queryset() \
+            .select_related('owner') \
             .filter(Q(date__gte=start_date) &
                     Q(date__lte=end_date))
         if period_id is not None:

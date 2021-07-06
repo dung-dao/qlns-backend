@@ -2,10 +2,12 @@ from rest_framework import serializers
 
 from qlns.apps.attendance.models import Attendance
 from qlns.apps.attendance.serializers.attendance.TrackingSerializer import TrackingSerializer
+from qlns.apps.core.serializers.public_employee_serializer import PublicEmployeeSerializer
 
 
 class AttendanceSerializer(serializers.ModelSerializer):
     schedule_hours = serializers.FloatField(read_only=True, source='get_schedule_hours')
+    owner = PublicEmployeeSerializer()
 
     class Meta:
         model = Attendance
