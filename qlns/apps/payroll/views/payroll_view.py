@@ -8,6 +8,7 @@ from django.db.transaction import atomic, set_rollback
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
+from django.utils import timezone
 from django.utils.html import strip_tags
 from formulas.errors import FormulaError
 from rest_framework import status, permissions
@@ -397,8 +398,10 @@ class PayrollView(
                 .order_by('field__index')
             values = list(map(map_value, _payslip_values))
 
-            payroll_name = f'Thông báo thông tin bảng lương {payroll.period.start_date.month}/{payroll.period.start_date.year}'
-            payslip_name = f'Phiếu lương {payroll.period.start_date.month}/{payroll.period.start_date.year}'
+            period_start_date = timezone.localtime(payroll.period.start_date)
+
+            payroll_name = f'Thông báo thông tin bảng lương {period_start_date.month}/{period_start_date.year}'
+            payslip_name = f'Phiếu lương {period_start_date.month}/{period_start_date.year}'
 
             html_context = {
                 'title': payslip_name,
