@@ -12,3 +12,4 @@ from .profile_view import ChangePasswordView, ChangeAvatarView
 from .bank_info_view import BankInfoView
 from .dependent_view import DependentView
 from .ApplicationConfigView import ApplicationConfigView
+from .co_worker_view import CoWorkerView

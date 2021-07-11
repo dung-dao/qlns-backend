@@ -16,8 +16,8 @@ router.register(r'languages', qualifications.LanguageView, basename='license')
 router.register(r'education_levels', qualifications.EducationLevelView, basename='education_level')
 router.register(r'skills', qualifications.SkillView, basename='skill')
 
-
 router.register(r'employees', core_views.EmployeeView, basename='employee')
+router.register(r'co-workers', core_views.CoWorkerView, basename='co_worker')
 
 pim_router = routers.NestedSimpleRouter(router, r'employees', lookup='employee')
 profile_urlpatterns = [
@@ -41,4 +41,3 @@ urlpatterns = [
     path('', include(pim_router.urls)),
     *profile_urlpatterns,
 ]
-
