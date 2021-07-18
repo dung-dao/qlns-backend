@@ -47,18 +47,28 @@ def add_recognition_image(person_id, image):
     """
     :param person_id: azure person_id
     :param image: read image
-    :return: Return True if action succeed otherwise return False
+    :return: persistedFaceId if action succeed otherwise return None
     """
     faces = detect_faces(image)
     if len(faces) != 1:
-        return False
+        return None
 
     url = f'{URL}/persongroups/ps1/persons/{person_id}/persistedFaces'
     headers = CREDENTIAL_HEADERS
     headers["Content-Type"] = 'application/octet-stream'
 
     res = requests.post(url, headers=headers, data=image)
-    return res.status_code in [200]
+    result = json.loads(res.text)
+    return result.get('persistedFaceId', None)
+
+
+def remove_recognition_image(person_id, az_face_id):
+    url = f'{URL}/persongroups/ps1/persons/{person_id}/persistedFaces/{az_face_id}'
+    headers = CREDENTIAL_HEADERS
+    res = requests.delete(url, headers=headers)
+    if res.status_code not in [200]:
+        return False
+    return True
 
 
 def verify(person_id, image):

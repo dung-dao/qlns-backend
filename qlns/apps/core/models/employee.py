@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.db import models
 
 from ...attendance.models import EmployeeSchedule
-from ...attendance.services.face_services import verify
+from ...attendance.services.face_services import verify, create_person
 
 
 def upload_to(instance, filename):
@@ -112,6 +112,10 @@ class Employee(models.Model):
             return "NewHired"
 
     def identify_image(self, image):
+        if self.recognition_id is None:
+            self.recognition_id = create_person(self.full_name)
+            self.save()
+
         return verify(self.recognition_id, image)
 
     def get_username(self):

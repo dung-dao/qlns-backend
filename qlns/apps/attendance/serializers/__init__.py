@@ -6,3 +6,4 @@ from qlns.apps.attendance.serializers.time_off.time_off_type_serializer import T
 from qlns.apps.attendance.serializers.time_off.time_off_serializer import TimeOffSerializer
 
 from .period_serializer import PeriodSerializer
+from .employee_face_serializer import EmployeeFaceSerializer

@@ -5,6 +5,7 @@ from .employee_schedule import EmployeeSchedule
 from .attendance import Attendance
 from .period import Period
 from .tracking import Tracking
+from .employee_face import EmployeeFace
 
 # Time Off
 from .holiday import Holiday

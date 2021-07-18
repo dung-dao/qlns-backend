@@ -22,6 +22,7 @@ emp_info_router = routers.NestedSimpleRouter(core_router, r'employees', lookup='
 emp_info_router.register('schedule', attendance_views.EmployeeScheduleView, basename='employee_schedule')
 emp_info_router.register('attendance', attendance_views.EmployeeAttendanceView, basename='employee_attendance')
 emp_info_router.register('time_off', EmployeeTimeOffView, basename='time_off')
+emp_info_router.register('faces', attendance_views.EmployeeFaceView, basename='face')
 
 urlpatterns = [
     path('', include(router.urls)),
