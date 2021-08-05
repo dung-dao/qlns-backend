@@ -1,38 +1,50 @@
-# Build development with cài đặt theo gói
+# UIT HRM (Backend)
+> This project is my graduate thesis at University of Information Technology
 
-**Cài đặt thư viện cần thiết bằng lệnh:**
+## Getting Started
+
+### Dependencies
+
+- Python 3.8.5 or above
+- MySQL
+
+### Installation
+- Install required packages: 
+```
 pip install -r requirements.txt
-
-**Chạy migrate database:**
+```
+- Migrate database
+```
 python manage.py migrate
-
-**Chạy lệnh tạo admin user:**
+```
+- Create superuser
+```
 python manage.py createsuperuser
+```
+- Run server
+```
+python manage.py runserver
+```
 
-**Chạy compilemessages nếu có:**
-python manage.py compilemessages
+## Built With
 
-**Chạy lệnh gom file static về thu mục static:**
-python manage.py collectstatic
+- [Django](https://www.djangoproject.com/) - The web framework for perfectionists with deadlines.
+- [Django REST Framework](https://www.django-rest-framework.org/) - Django REST framework is a powerful and flexible toolkit for building Web APIs.
+- [Face API](https://azure.microsoft.com/en-us/services/cognitive-services/face/) - An AI service that analyzes faces in images
+- MySQL
 
+## Funtions
+* Manage employee information
+* Manage leaves
+* Manage attendance
+  * Check in / check out with face image
+  * Check in / check out with location
+* Customize payslip field, formula
+* Manage monthly payroll
 
-# Build development with docker.
+## Demo
+Watch demo video [here](https://youtube.com/playlist?list=PLONxn6r2Z92wl_XgIgQoVYfQdteP7b5mR)
 
-Pull source code from gitlab
+## Meta
 
-Rename file settings.example.py thành settings.py
-
-Vào thư mục gốc của dự án đã clone về.
-**Chạy lệnh bên dưới:**
-docker-compose up --build -d 
-
-**Sau đó chạy lênh migrate dữ liệu:**
-docker-compose run web python manage.py migrate
-
-**Chạy lệnh tạo user admin:**
-docker-compose run web python manage.py createsuperuser
-
-**Vào trình duyệt để kiểm tra:**
-localhost:8000
-
-
+Đào Mạnh Dũng –  daomanhdung@hotmail.com
