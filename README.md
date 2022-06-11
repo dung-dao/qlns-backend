@@ -43,7 +43,7 @@ python manage.py runserver
 * Manage monthly payroll
 
 ## Demo
-Watch demo video [here](https://youtube.com/playlist?list=PLONxn6r2Z92wl_XgIgQoVYfQdteP7b5mR)
+Watch demo video [here](https://youtube.com/playlist?list=PLONxn6r2Z92yKeNqSKOhpwRQBPP4OaStX)
 
 ## Meta
 
